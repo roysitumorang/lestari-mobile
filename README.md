@@ -10,7 +10,7 @@ purchases, 30 reports, branches, settings, staff, online orders, PPOB, billing â
 | Language | Java 17 (no Kotlin) |
 | Dependencies | **none** â€” Android platform APIs only (no AndroidX, no third-party libraries) |
 | Android | minimum 15 (API 35), target/compile 16 (API 36) |
-| Build | Gradle 8.14.3 wrapper + Android Gradle Plugin 8.13.0 |
+| Build | Gradle 9.9.0 wrapper + Android Gradle Plugin 9.5.1 (JDK 17+) |
 | UI | built in Java code from platform widgets (no XML layouts); only the launcher icon, theme and network config are resources |
 
 ## Build and run

@@ -1,4 +1,4 @@
 // Top-level build file. The app itself has no library dependencies: Android platform APIs only.
 plugins {
-    id "com.android.application" version "8.13.0" apply false
+    id "com.android.application" version "9.5.1" apply false
 }

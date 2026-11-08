@@ -3,28 +3,28 @@ plugins {
 }
 
 android {
-    namespace "id.lestari.mobile"
-    compileSdk 36
+    namespace = "id.lestari.mobile"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "id.lestari.mobile"
-        minSdk 35
-        targetSdk 36
-        versionCode 1
-        versionName "1.0.0"
+        applicationId = "id.lestari.mobile"
+        minSdk = 35
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0.0"
     }
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled = true
+            shrinkResources = true
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
