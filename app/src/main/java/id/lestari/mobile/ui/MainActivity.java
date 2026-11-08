@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Insets;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
@@ -21,11 +20,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Toolbar;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 
 import id.lestari.mobile.LestariApp;
 import id.lestari.mobile.core.Api;
@@ -62,8 +64,8 @@ public final class MainActivity extends Activity implements Host {
     private Registry registry;
     private final Map<Integer, FilePicked> pickers = new HashMap<>();
     private int nextRequest = 100;
-    /** Predictive-back registration (Android 13+), kept in a nested class so older runtimes never load its types. */
-    private Object back33;
+    private final OnBackInvokedCallback backCallback = this::back;
+    private boolean backRegistered;
     private int unread;
     private final Runnable badgeLoop = new Runnable() {
         @Override
@@ -125,30 +127,17 @@ public final class MainActivity extends Activity implements Host {
         edgeToEdge();
     }
 
-    /** Draw behind the system bars and pad: toolbar below the status bar, content above the navigation bar / keyboard. */
-    @SuppressWarnings("deprecation")
+    /**
+     * Android 15+ always draws edge-to-edge: pad the toolbar below the status bar / cutout and the content above
+     * the navigation bar or the keyboard, whichever is taller.
+     */
     private void edgeToEdge() {
-        getWindow().setStatusBarColor(0x00000000);
-        getWindow().setNavigationBarColor(Theme.background);
-        if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
         recolor();
         root.setOnApplyWindowInsetsListener((v, insets) -> {
-            int top, bottom, left, right;
-            if (Build.VERSION.SDK_INT >= 30) {
-                Insets sys = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
-                Insets ime = insets.getInsets(WindowInsets.Type.ime());
-                top = sys.top;
-                bottom = Math.max(sys.bottom, ime.bottom);
-                left = sys.left;
-                right = sys.right;
-            } else {
-                top = insets.getSystemWindowInsetTop();
-                bottom = insets.getSystemWindowInsetBottom();
-                left = insets.getSystemWindowInsetLeft();
-                right = insets.getSystemWindowInsetRight();
-            }
-            bar.setPadding(left, top, right, 0);
-            content.setPadding(left, 0, right, bottom);
+            Insets sys = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+            Insets ime = insets.getInsets(WindowInsets.Type.ime());
+            bar.setPadding(sys.left, sys.top, sys.right, 0);
+            content.setPadding(sys.left, 0, sys.right, Math.max(sys.bottom, ime.bottom));
             return insets;
         });
     }
@@ -176,22 +165,14 @@ public final class MainActivity extends Activity implements Host {
     }
 
     /** Apply the current palette to the activity chrome and the system bar icons. */
-    @SuppressWarnings("deprecation")
     private void recolor() {
         root.setBackgroundColor(Theme.background);
         bar.setBackgroundColor(Theme.primary);
-        getWindow().setNavigationBarColor(Theme.background);
-        if (Build.VERSION.SDK_INT >= 30) {
-            android.view.WindowInsetsController c = getWindow().getInsetsController();
-            if (c != null) {
-                // status bar sits on the colored toolbar (light icons); navigation bar on the page background
-                c.setSystemBarsAppearance(Theme.dark ? 0 : android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                        android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
-            }
-        } else {
-            int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-            if (!Theme.dark) flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-            root.setSystemUiVisibility(flags);
+        WindowInsetsController c = getWindow().getInsetsController();
+        if (c != null) {
+            // status bar sits on the colored toolbar (light icons); navigation bar on the page background
+            c.setSystemBarsAppearance(Theme.dark ? 0 : WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS | WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
         }
     }
 
@@ -232,14 +213,6 @@ public final class MainActivity extends Activity implements Host {
         else finish();
     }
 
-    @Override
-    @SuppressWarnings("deprecation")
-    public void onBackPressed() {
-        // Android 10–12; newer versions use the OnBackInvokedCallback registered in render().
-        if (stack.size() > 1 || (!stack.isEmpty() && stack.get(stack.size() - 1).onBack())) back();
-        else super.onBackPressed();
-    }
-
     private void render() {
         Screen top = stack.get(stack.size() - 1);
         content.removeAllViews();
@@ -257,32 +230,16 @@ public final class MainActivity extends Activity implements Host {
         updateBackCallback();
     }
 
+    /** Predictive back: handle the gesture while a screen can be popped; at the root the system closes the app. */
     private void updateBackCallback() {
-        if (Build.VERSION.SDK_INT < 33) return;
-        if (back33 == null) back33 = new Back33(this);
-        ((Back33) back33).update(stack.size() > 1);
-    }
-
-    @android.annotation.TargetApi(33)
-    private static final class Back33 {
-        private final MainActivity act;
-        private final android.window.OnBackInvokedCallback callback;
-        private boolean registered;
-
-        Back33(MainActivity act) {
-            this.act = act;
-            this.callback = act::back;
-        }
-
-        void update(boolean want) {
-            android.window.OnBackInvokedDispatcher d = act.getOnBackInvokedDispatcher();
-            if (want && !registered) {
-                d.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, callback);
-                registered = true;
-            } else if (!want && registered) {
-                d.unregisterOnBackInvokedCallback(callback);
-                registered = false;
-            }
+        boolean want = stack.size() > 1;
+        OnBackInvokedDispatcher d = getOnBackInvokedDispatcher();
+        if (want && !backRegistered) {
+            d.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, backCallback);
+            backRegistered = true;
+        } else if (!want && backRegistered) {
+            d.unregisterOnBackInvokedCallback(backCallback);
+            backRegistered = false;
         }
     }
 
@@ -556,13 +513,21 @@ public final class MainActivity extends Activity implements Host {
 
     // ------------------------------------------------------------------ files
 
-    /** Let the user pick a document (image, PDF, spreadsheet …); the bytes are read in the background. */
+    /**
+     * Let the user pick a file; the bytes are read in the background. Images use the system photo picker,
+     * anything else (PDF, spreadsheets, or image-or-PDF) the document picker. Neither needs a storage permission.
+     */
     public void pickFile(String[] mimeTypes, FilePicked cb) {
-        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE);
-        if (mimeTypes.length == 1) i.setType(mimeTypes[0]);
-        else {
-            i.setType("*/*");
-            i.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        Intent i;
+        if (mimeTypes.length == 1 && "image/*".equals(mimeTypes[0])) {
+            i = new Intent(MediaStore.ACTION_PICK_IMAGES);
+        } else {
+            i = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE);
+            if (mimeTypes.length == 1) i.setType(mimeTypes[0]);
+            else {
+                i.setType("*/*");
+                i.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+            }
         }
         int code = nextRequest++;
         pickers.put(code, cb);

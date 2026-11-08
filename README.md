@@ -9,7 +9,7 @@ purchases, 30 reports, branches, settings, staff, online orders, PPOB, billing â
 |---|---|
 | Language | Java 17 (no Kotlin) |
 | Dependencies | **none** â€” Android platform APIs only (no AndroidX, no third-party libraries) |
-| Android | minimum 10 (API 29), target/compile 16 (API 36) |
+| Android | minimum 15 (API 35), target/compile 16 (API 36) |
 | Build | Gradle 8.14.3 wrapper + Android Gradle Plugin 8.13.0 |
 | UI | built in Java code from platform widgets (no XML layouts); only the launcher icon, theme and network config are resources |
 
@@ -70,8 +70,8 @@ details, edit round-trips, exports, reports, settings and actions) without an em
   `X-Branch-Id`, and lookups are reloaded.
 - **Downloads** (receipts, invoices, reports, barcode sheets, exports) are saved to *Downloads* through MediaStore
   (no storage permission) and offered to a viewer app.
-- **Uploads** (images, transfer receipts, imports) use the system document picker.
+- **Uploads**: images use the system photo picker; transfer receipts and imports use the document picker.
 - **Plugins**: pages that need an inactive plugin show a lock screen with a link to *Plugins*.
 - **Two-step verification**: setup shows the secret key and an "Open in authenticator app" (`otpauth://`) button;
   sign-in asks for the code when the account needs it.
-- Edge-to-edge layout with system-bar and keyboard insets; predictive back on Android 13+.
+- Edge-to-edge layout with system-bar, cutout and keyboard insets; predictive back.
