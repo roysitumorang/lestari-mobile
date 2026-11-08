@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Platform Material theme; screens are built in Java and draw their own colors (see ui/Theme.java). -->
+    <style name="Theme.Lestari" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:colorPrimary">#0F8A68</item>
+        <item name="android:colorPrimaryDark">#0B6B51</item>
+        <item name="android:colorAccent">#0F8A68</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>
