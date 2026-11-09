@@ -160,7 +160,7 @@ public final class Ui {
 
     /** A small colored pill for statuses. */
     public static TextView badge(Context c, String value) {
-        TextView t = text(c, Format.humanize(value), 12, Theme.statusColor(value), true);
+        TextView t = text(c, Format.badge(value), 12, Theme.statusColor(value), true);
         int col = Theme.statusColor(value);
         t.setBackground(rounded((col & 0x00FFFFFF) | 0x22000000, 0, 10, c));
         t.setPadding(dp(c, 8), dp(c, 2), dp(c, 8), dp(c, 2));

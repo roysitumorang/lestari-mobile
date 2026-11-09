@@ -43,6 +43,7 @@ app/src/main/java/id/lestari/mobile/
   core/               plain Java (java.net + org.json) — no Android imports
     Api.java            HttpURLConnection client: bearer token, X-Branch-Id, one refresh on 401,
                         base64 passwords, multipart uploads, file downloads, PATCH
+    I18n.java           English / Bahasa Indonesia: I18n.t("…"), dictionary from assets/i18n/id.json
     Field, Action, Page, Registry, Lookup, Opt, Format, Json, Host
   defs/               the 80 page definitions + navigation menu (ported from lestari-client js/modules)
   ui/                 Android screens interpreting the definitions
@@ -60,6 +61,24 @@ The same idea as the web client: pages are **declared** (fields, columns, filter
 generic screens render them, so adding a field or an action is a one-line change in `defs/`. Because `core/` and
 `defs/` are plain Java, they can be exercised on a desktop JVM against a running backend (every page's list,
 details, edit round-trips, exports, reports, settings and actions) without an emulator.
+
+## Languages
+
+The app speaks **English** and **Bahasa Indonesia**.
+
+- Switch with the buttons on the sign-in screen or *Language* in the home screen's menu. The choice is stored on the
+  device and in the account's display settings (`PUT /settings/display {"language": "id"}`), so the web back office
+  follows it — and a choice made there is picked up by the app at the next sign-in or appearance change. Without a
+  stored choice the phone's language decides.
+- Every request sends `Accept-Language: en|id`, so server messages and downloaded documents match.
+- English text is the dictionary key. Page definitions translate their labels while they are built
+  (`Defs.reset()` rebuilds them after a switch); screens wrap their own text in `I18n.t("…")`, with
+  `{placeholders}`: `I18n.t("Page {page} of {pages}", "page", 2, "pages", 5)`.
+- The dictionary `app/src/main/assets/i18n/id.json` is generated from lestari-client's `js/i18n/id.js`:
+  ```bash
+  node ../lestari-client/tools/i18n-export.js app/src/main/assets/i18n/id.json
+  python3 tools/i18n_check.py      # lists text without a translation (exit 1 if any)
+  ```
 
 ## Behaviour worth knowing
 

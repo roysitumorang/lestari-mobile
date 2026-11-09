@@ -5,6 +5,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Page;
 
 /** Shown instead of a page whose plugin is not active. */
@@ -30,13 +31,13 @@ public final class PluginGateScreen extends Screen {
         TextView lock = Ui.text(ctx, "🔒", 40, Theme.muted, false);
         lock.setGravity(Gravity.CENTER);
         box.addView(lock, Ui.match());
-        TextView t = Ui.title(ctx, def.plugin == null ? "This page is not available" : "This feature needs the " + def.plugin + " plugin");
+        TextView t = Ui.title(ctx, def.plugin == null ? I18n.t("This page is not available") : I18n.t("This feature needs the {plugin} plugin", "plugin", def.plugin));
         t.setGravity(Gravity.CENTER);
         box.addView(t, Ui.margins(Ui.match(), ctx, 0, 12, 0, 4));
-        TextView s = Ui.muted(ctx, "Subscribe or start a 7-day trial to unlock it.");
+        TextView s = Ui.muted(ctx, I18n.t("Subscribe or start a 7-day trial to unlock it."));
         s.setGravity(Gravity.CENTER);
         box.addView(s, Ui.match());
-        box.addView(Ui.button(ctx, "See plugins", Ui.Style.PRIMARY, v -> act.open("plugins")), Ui.margins(Ui.wrap(), ctx, 0, 16, 0, 0));
+        box.addView(Ui.button(ctx, I18n.t("See plugins"), Ui.Style.PRIMARY, v -> act.open("plugins")), Ui.margins(Ui.wrap(), ctx, 0, 16, 0, 0));
         return Ui.scroll(ctx, box);
     }
 }

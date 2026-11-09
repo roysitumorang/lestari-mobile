@@ -7,6 +7,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import id.lestari.mobile.core.Format;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Page;
 
@@ -45,7 +46,7 @@ public final class MissionsScreen extends Screen {
     @Override
     public List<ToolItem> menu() {
         List<ToolItem> m = new ArrayList<>();
-        m.add(new ToolItem("Refresh", false, this::reload));
+        m.add(new ToolItem(I18n.t("Refresh"), false, this::reload));
         return m;
     }
 
@@ -56,7 +57,7 @@ public final class MissionsScreen extends Screen {
         list.addView(Ui.spinner(ctx));
         load(() -> Json.objects(act.api().get("/missions").opt("data")), rows -> {
             list.removeAllViews();
-            if (rows.isEmpty()) list.addView(Ui.empty(ctx, "No missions right now"));
+            if (rows.isEmpty()) list.addView(Ui.empty(ctx, I18n.t("No missions right now")));
             for (JSONObject m : rows) list.addView(card(m), Ui.cardParams(ctx));
         }, e -> {
             list.removeAllViews();
@@ -79,14 +80,14 @@ public final class MissionsScreen extends Screen {
         bar.setProgress(Math.min(progress, target));
         bar.setProgressTintList(ColorStateList.valueOf(Theme.primary));
         c.addView(bar, Ui.match());
-        c.addView(Ui.body(ctx, progress + " / " + target + " · Reward: " + Format.number(m.opt("reward_amount")) + " " + Format.humanize(Json.str(m, "reward_type"))),
+        c.addView(Ui.body(ctx, progress + " / " + target + " · " + I18n.t("Reward:") + " " + Format.number(m.opt("reward_amount")) + " " + Format.badge(Json.str(m, "reward_type"))),
                 Ui.margins(Ui.match(), ctx, 0, 4, 0, 4));
         if ("completed".equals(status)) {
-            final Button claim = Ui.button(ctx, "Claim reward", Ui.Style.PRIMARY, null);
+            final Button claim = Ui.button(ctx, I18n.t("Claim reward"), Ui.Style.PRIMARY, null);
             claim.setOnClickListener(v -> {
                 claim.setEnabled(false);
                 act.runQuietly(() -> act.api().post("/missions/" + Json.str(m, "id") + "/claim", null), r -> {
-                    act.toast("Reward claimed");
+                    act.toast(I18n.t("Reward claimed"));
                     reload();
                 }, e -> {
                     claim.setEnabled(true);
@@ -96,7 +97,7 @@ public final class MissionsScreen extends Screen {
             c.addView(claim, Ui.wrap());
         } else {
             final String route = Json.str(m, "action_route");
-            if (!route.isEmpty() && "in_progress".equals(status)) c.addView(Ui.button(ctx, "Go", Ui.Style.OUTLINE, v -> act.open(route)), Ui.wrap());
+            if (!route.isEmpty() && "in_progress".equals(status)) c.addView(Ui.button(ctx, I18n.t("Go"), Ui.Style.OUTLINE, v -> act.open(route)), Ui.wrap());
         }
         return c;
     }

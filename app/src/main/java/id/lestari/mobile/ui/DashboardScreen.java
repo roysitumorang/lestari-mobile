@@ -8,6 +8,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import id.lestari.mobile.core.Format;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Page;
 
@@ -50,8 +51,8 @@ public final class DashboardScreen extends Screen {
             reload();
         }, date.getYear(), date.getMonthValue() - 1, date.getDayOfMonth()).show());
         controls.addView(dateButton, Ui.match());
-        unpaidRevenue = toggle("Include unpaid revenue");
-        unpaidProfit = toggle("Include unpaid profit");
+        unpaidRevenue = toggle(I18n.t("Include unpaid revenue"));
+        unpaidProfit = toggle(I18n.t("Include unpaid profit"));
         controls.addView(unpaidRevenue, Ui.margins(Ui.match(), ctx, 0, 8, 0, 0));
         controls.addView(unpaidProfit, Ui.margins(Ui.match(), ctx, 0, 4, 0, 0));
         box.addView(controls, Ui.cardParams(ctx));
@@ -71,13 +72,13 @@ public final class DashboardScreen extends Screen {
     }
 
     private void paintDate() {
-        dateButton.setText("Day: " + Format.date(date.toString()));
+        dateButton.setText(I18n.t("Day") + ": " + Format.date(date.toString()));
     }
 
     @Override
     public List<ToolItem> menu() {
         List<ToolItem> m = new ArrayList<>();
-        m.add(new ToolItem("Refresh", false, this::reload));
+        m.add(new ToolItem(I18n.t("Refresh"), false, this::reload));
         return m;
     }
 
@@ -106,7 +107,7 @@ public final class DashboardScreen extends Screen {
             final String route = Json.str(a, "action_route");
             if (!route.isEmpty()) {
                 String label = Json.str(a, "action_label");
-                card.addView(Ui.button(ctx, label.isEmpty() ? "Open" : label, Ui.Style.TEXT, v -> act.open(route)), Ui.wrap());
+                card.addView(Ui.button(ctx, label.isEmpty() ? I18n.t("Open") : label, Ui.Style.TEXT, v -> act.open(route)), Ui.wrap());
             }
             body.addView(card, Ui.cardParams(ctx));
         }
@@ -114,26 +115,26 @@ public final class DashboardScreen extends Screen {
         if (s == null) s = new JSONObject();
         JSONObject cmp = s.optJSONObject("compared_to_previous");
         if (cmp == null) cmp = new JSONObject();
-        body.addView(stat("Transactions", Format.number(s.opt("transaction_count")), cmp.opt("transaction_count")), Ui.cardParams(ctx));
-        body.addView(stat("Revenue", Format.money(s.opt("revenue")), cmp.opt("revenue")), Ui.cardParams(ctx));
-        body.addView(stat("Profit", Format.money(s.opt("profit")), cmp.opt("profit")), Ui.cardParams(ctx));
+        body.addView(stat(I18n.t("Transactions"), Format.number(s.opt("transaction_count")), cmp.opt("transaction_count")), Ui.cardParams(ctx));
+        body.addView(stat(I18n.t("Revenue"), Format.money(s.opt("revenue")), cmp.opt("revenue")), Ui.cardParams(ctx));
+        body.addView(stat(I18n.t("Profit"), Format.money(s.opt("profit")), cmp.opt("profit")), Ui.cardParams(ctx));
 
         List<JSONObject> hourly = Json.objects(d.opt("hourly"));
-        chart("Transactions", hourly, "transaction_count", "number");
-        chart("Revenue", hourly, "revenue", "money");
-        chart("Profit", hourly, "profit", "money");
+        chart(I18n.t("Transactions"), hourly, "transaction_count", "number");
+        chart(I18n.t("Revenue"), hourly, "revenue", "money");
+        chart(I18n.t("Profit"), hourly, "profit", "money");
 
         LinearLayout top = Ui.card(ctx);
-        top.addView(Ui.text(ctx, "Top products", 15, Theme.text, true));
+        top.addView(Ui.text(ctx, I18n.t("Top products"), 15, Theme.text, true));
         List<JSONObject> tp = Json.objects(d.opt("top_products"));
-        if (tp.isEmpty()) top.addView(Ui.muted(ctx, "No sales yet"));
+        if (tp.isEmpty()) top.addView(Ui.muted(ctx, I18n.t("No sales yet")));
         for (JSONObject p : tp) top.addView(Ui.pair(ctx, Json.str(p, "name"), Format.number(p.opt("quantity")) + " · " + Format.money(p.opt("revenue"))), Ui.match());
         body.addView(top, Ui.cardParams(ctx));
 
         LinearLayout low = Ui.card(ctx);
-        low.addView(Ui.text(ctx, "Low stock", 15, Theme.text, true));
+        low.addView(Ui.text(ctx, I18n.t("Low stock"), 15, Theme.text, true));
         List<JSONObject> ls = Json.objects(d.opt("low_stock"));
-        if (ls.isEmpty()) low.addView(Ui.muted(ctx, "All stock levels are fine"));
+        if (ls.isEmpty()) low.addView(Ui.muted(ctx, I18n.t("All stock levels are fine")));
         for (JSONObject p : ls) {
             low.addView(Ui.pair(ctx, Json.str(p, "name"), Format.number(p.opt("stock")) + " (min " + Format.number(p.opt("minimum_stock")) + ")"), Ui.match());
         }
@@ -146,7 +147,7 @@ public final class DashboardScreen extends Screen {
         c.addView(Ui.text(ctx, value, 22, Theme.text, true));
         if (delta != null && delta != JSONObject.NULL) {
             double dv = Json.num(delta);
-            TextView t = Ui.text(ctx, (dv >= 0 ? "▲ " : "▼ ") + Format.number(Math.abs(dv)) + "% vs previous day", 13, dv >= 0 ? Theme.success : Theme.danger, false);
+            TextView t = Ui.text(ctx, (dv >= 0 ? "▲ " : "▼ ") + Format.number(Math.abs(dv)) + "% " + I18n.t("vs previous day"), 13, dv >= 0 ? Theme.success : Theme.danger, false);
             c.addView(t);
         }
         return c;

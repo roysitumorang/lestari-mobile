@@ -25,7 +25,7 @@ public final class ApiException extends Exception {
         JSONObject err = payload == null ? null : payload.optJSONObject("error");
         String code = err != null ? err.optString("code", "http_" + status) : "http_" + status;
         String msg = err != null ? err.optString("message", "") : "";
-        if (msg.isEmpty()) msg = "Request failed (" + status + ")";
+        if (msg.isEmpty()) msg = I18n.t("Request failed ({status})", "status", status);
         ApiException e = new ApiException(status, code, msg);
         JSONObject f = err == null ? null : err.optJSONObject("fields");
         if (f != null) {

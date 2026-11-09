@@ -11,6 +11,7 @@ import static id.lestari.mobile.defs.Common.list;
 
 import id.lestari.mobile.core.Action;
 import id.lestari.mobile.core.Field;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Lookup;
 import id.lestari.mobile.core.Opt;
@@ -24,18 +25,24 @@ import java.util.List;
 final class TransactionDefs {
     private TransactionDefs() {}
 
-    static final List<Field> SALE_DETAIL = list(
-            Field.col("receipt_number", "Receipt number"), Field.datetime("created_at", "Date"),
-            Field.col("cashier_name", "Cashier"), Field.col("customer.name", "Customer"),
-            Field.col("payment_method", "Payment method"), Field.select("payment_type", "Payment type", PAYMENT_TYPE),
-            Field.items("items", "Items", Field.col("product_name", "Item"), Field.col("variant_name", "Variant"), Field.col("quantity", "Qty", "number"),
-                    Field.col("unit_price", "Price", "money"), Field.col("discount_amount", "Discount", "money"), Field.col("subtotal", "Subtotal", "money")),
-            Field.money("subtotal", "Subtotal"), Field.money("discount_total", "Discount"),
-            Field.money("tax_total", "Tax"), Field.money("service_charge", "Service charge"),
-            Field.money("fee_total", "Fees"), Field.money("rounding", "Rounding"),
-            Field.money("grand_total", "Total"), Field.money("paid_amount", "Paid"),
-            Field.money("change_amount", "Change"), Field.money("profit", "Profit"),
-            Field.col("label", "Label / table"), Field.col("note", "Note"), Field.col("status", "Status"));
+    static List<Field> SALE_DETAIL;
+
+
+    /** (Re)builds the shared options and fields in the current language; called by Defs.build(). */
+    static void init() {
+        SALE_DETAIL = list(
+                Field.col("receipt_number", "Receipt number"), Field.datetime("created_at", "Date"),
+                Field.col("cashier_name", "Cashier"), Field.col("customer.name", "Customer"),
+                Field.col("payment_method", "Payment method"), Field.select("payment_type", "Payment type", PAYMENT_TYPE),
+                Field.items("items", "Items", Field.col("product_name", "Item"), Field.col("variant_name", "Variant"), Field.col("quantity", "Qty", "number"),
+                        Field.col("unit_price", "Price", "money"), Field.col("discount_amount", "Discount", "money"), Field.col("subtotal", "Subtotal", "money")),
+                Field.money("subtotal", "Subtotal"), Field.money("discount_total", "Discount"),
+                Field.money("tax_total", "Tax"), Field.money("service_charge", "Service charge"),
+                Field.money("fee_total", "Fees"), Field.money("rounding", "Rounding"),
+                Field.money("grand_total", "Total"), Field.money("paid_amount", "Paid"),
+                Field.money("change_amount", "Change"), Field.money("profit", "Profit"),
+                Field.col("label", "Label / table"), Field.col("note", "Note"), Field.col("status", "Status"));
+    }
 
     static void register(Registry r) {
         r.add(new Page(Page.Kind.CRUD, "sales", "Sales").singular("Sale").endpoint("/sales")
@@ -117,7 +124,7 @@ final class TransactionDefs {
         r.add(new Page(Page.Kind.CRUD, id, title).singular(title.substring(0, title.length() - 1)).endpoint(endpoint)
                 .ops("list", "read", "export").readOnly().titleKey("reference_number")
                 .tabs("status", "unpaid", Opt.pairs("unpaid", "Unpaid", "paid", "Paid", "", "All"))
-                .search("Search " + partyLabel.toLowerCase() + " or reference")
+                .search(I18n.t("Search {party} or reference", "party", I18n.t(partyLabel).toLowerCase()))
                 .filters(Field.lookup(party + "_id", partyLabel, lookup), Field.select("overdue", "Due", Opt.pairs("true", "Overdue only")))
                 .columns(Field.col("transaction_date", "Date", "date"), Field.col("reference_number", "Reference"), Field.col(party + ".name", partyLabel),
                         Field.col("total_amount", "Total", "money"), Field.col("paid_amount", "Paid", "money"), Field.col("remaining_amount", "Remaining", "money"),

@@ -22,6 +22,7 @@ import id.lestari.mobile.core.Api;
 import id.lestari.mobile.core.Field;
 import id.lestari.mobile.core.FileRef;
 import id.lestari.mobile.core.Format;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Opt;
 
@@ -127,7 +128,7 @@ public final class FormView {
             boolean empty = v == null || v == JSONObject.NULL || "".equals(v) || (v instanceof JSONArray && ((JSONArray) v).length() == 0)
                     || ("switch".equals(w.f.type) && Boolean.FALSE.equals(v));
             if (empty) {
-                w.setError("Required");
+                w.setError(I18n.t("Required"));
                 ok = false;
             }
         }
@@ -402,7 +403,7 @@ public final class FormView {
         }
 
         private String placeholder() {
-            return f.placeholder != null ? f.placeholder : "— Select —";
+            return f.placeholder != null ? f.placeholder : I18n.t("— Select —");
         }
 
         void paint() {
@@ -417,7 +418,7 @@ public final class FormView {
 
         void open() {
             if (options == null) {
-                act.toast("Loading options…");
+                act.toast(I18n.t("Loading options…"));
                 return;
             }
             Dialogs.pick(c, f.label, options, !f.required || value == null, o -> {
@@ -447,7 +448,7 @@ public final class FormView {
             button.setEnabled(!f.readonly);
             button.setOnClickListener(v -> {
                 if (options == null) {
-                    act.toast("Loading options…");
+                    act.toast(I18n.t("Loading options…"));
                     return;
                 }
                 Set<String> sel = new HashSet<>();
@@ -470,7 +471,7 @@ public final class FormView {
 
         void paint() {
             if (values.isEmpty()) {
-                button.setText("None selected");
+                button.setText(I18n.t("None selected"));
                 button.setTextColor(Theme.muted);
                 return;
             }
@@ -511,7 +512,7 @@ public final class FormView {
             button.setOnClickListener(v -> open());
             row.addView(button, Ui.weight(1));
             if (!f.readonly) {
-                Button clear = Ui.button(c, "Clear", Ui.Style.TEXT, v -> {
+                Button clear = Ui.button(c, I18n.t("Clear"), Ui.Style.TEXT, v -> {
                     value = null;
                     paint();
                     changed();
@@ -525,7 +526,7 @@ public final class FormView {
 
         void paint() {
             String text;
-            if (value == null) text = "date".equals(f.type) ? "Pick a date" : "time".equals(f.type) ? "Pick a time" : "Pick date and time";
+            if (value == null) text = I18n.t("date".equals(f.type) ? "Pick a date" : "time".equals(f.type) ? "Pick a time" : "Pick date and time");
             else if ("date".equals(f.type)) text = Format.date(value);
             else if ("time".equals(f.type)) text = value;
             else text = Format.datetime(value);
@@ -586,8 +587,8 @@ public final class FormView {
             preview = Ui.thumb(c, url, 72);
             row.addView(preview);
             LinearLayout buttons = Ui.vbox(c);
-            Button choose = Ui.button(c, "Choose image", Ui.Style.OUTLINE, v -> act.pickFile(new String[]{"image/*"}, file -> upload(file)));
-            Button remove = Ui.button(c, "Remove", Ui.Style.TEXT, v -> {
+            Button choose = Ui.button(c, I18n.t("Choose image"), Ui.Style.OUTLINE, v -> act.pickFile(new String[]{"image/*"}, file -> upload(file)));
+            Button remove = Ui.button(c, I18n.t("Remove"), Ui.Style.TEXT, v -> {
                 url = null;
                 ImageLoader.load(preview, null, 0);
                 changed();
@@ -602,7 +603,7 @@ public final class FormView {
         }
 
         void upload(FileRef file) {
-            act.toast("Uploading…");
+            act.toast(I18n.t("Uploading…"));
             act.run(() -> act.api().upload("/uploads", new Api.Multipart().file("file", file.name, file.mimeType, file.bytes).field("purpose", f.key))
                     .getJSONObject("data").getString("url"), u -> {
                 url = u;
@@ -624,7 +625,7 @@ public final class FormView {
         FileW(Field f) {
             super(f);
             label();
-            button = pickerButton("Choose file");
+            button = pickerButton(I18n.t("Choose file"));
             button.setTextColor(Theme.muted);
             button.setOnClickListener(v -> act.pickFile(mimeTypes(f.accept), picked -> {
                 file = picked;
@@ -678,7 +679,7 @@ public final class FormView {
                 ws.put(s.key, w);
                 card.addView(w.block, Ui.match());
             }
-            Button del = Ui.button(c, "Remove row", Ui.Style.TEXT, v -> {
+            Button del = Ui.button(c, I18n.t("Remove row"), Ui.Style.TEXT, v -> {
                 rows.removeView(card);
                 rowWidgets.remove(ws);
                 changed();

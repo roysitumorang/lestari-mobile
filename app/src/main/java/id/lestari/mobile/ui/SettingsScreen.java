@@ -7,6 +7,7 @@ import android.widget.LinearLayout;
 import id.lestari.mobile.core.Action;
 import id.lestari.mobile.core.ApiException;
 import id.lestari.mobile.core.Field;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Page;
 
@@ -80,7 +81,7 @@ public final class SettingsScreen extends Screen implements Action.Ctx {
         form = new FormView(act, fields, values, false);
         card.addView(form.view(), Ui.match());
         if (!def.readOnly) {
-            save = Ui.button(ctx, "Save changes", Ui.Style.PRIMARY, v -> save());
+            save = Ui.button(ctx, I18n.t("Save changes"), Ui.Style.PRIMARY, v -> save());
             card.addView(save, Ui.margins(Ui.match(), ctx, 0, 12, 0, 0));
         }
         box.addView(card, Ui.cardParams(ctx));
@@ -159,12 +160,12 @@ public final class SettingsScreen extends Screen implements Action.Ctx {
     @Override
     public List<ToolItem> menu() {
         List<ToolItem> m = new ArrayList<>();
-        if (!def.readOnly) m.add(new ToolItem("Save", true, this::save));
+        if (!def.readOnly) m.add(new ToolItem(I18n.t("Save"), true, this::save));
         for (final Action a : def.toolbar) {
             if (!a.appliesTo(data)) continue;
             m.add(new ToolItem(a.label, false, () -> a.run(act, data, this)));
         }
-        m.add(new ToolItem("Refresh", false, this::reload));
+        m.add(new ToolItem(I18n.t("Refresh"), false, this::reload));
         return m;
     }
 

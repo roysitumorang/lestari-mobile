@@ -13,6 +13,7 @@ import static id.lestari.mobile.defs.Common.list;
 
 import id.lestari.mobile.core.Action;
 import id.lestari.mobile.core.Field;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Host;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Lookup;
@@ -49,9 +50,15 @@ final class SettingsDefs {
     }
 
     /** Change password — also offered from the main menu. */
-    static final Action CHANGE_PASSWORD = Action.call("password", "Change password", "PUT", "/auth/password").noReload().success("Password changed")
-            .form(Field.password("current_password", "Current password").req().w(12), Field.password("new_password", "New password").req().w(12),
-                    Field.password("new_password_confirmation", "Repeat new password").req().w(12));
+    static Action CHANGE_PASSWORD;
+
+
+    /** (Re)builds the shared options and fields in the current language; called by Defs.build(). */
+    static void init() {
+        CHANGE_PASSWORD = Action.call("password", "Change password", "PUT", "/auth/password").noReload().success("Password changed")
+                .form(Field.password("current_password", "Current password").req().w(12), Field.password("new_password", "New password").req().w(12),
+                        Field.password("new_password_confirmation", "Repeat new password").req().w(12));
+    }
 
     static void register(Registry r) {
         // ---------- profile ----------
@@ -199,7 +206,7 @@ final class SettingsDefs {
                         Action.call("resend", "Resend invitation email", "POST", "/staff/{id}/resend-invitation").confirm("Send the confirmation email again?")
                                 .success("Invitation sent").when(row -> "invited".equals(row.optString("status"))),
                         Action.custom("log", "Activity log", (host, row, ctx) -> activityLog(host, "/staff/" + row.optString("id") + "/activity-logs",
-                                "Activity · " + row.optString("name")))));
+                                I18n.t("Activity log") + " · " + row.optString("name")))));
 
         r.add(new Page(Page.Kind.REPORT, "attendance", "Staff Attendance").endpoint("/staff-attendances").plugin("attendance").preset("this_month")
                 .filters(Field.lookup("staff_id", "Staff", STAFF))
@@ -248,7 +255,7 @@ final class SettingsDefs {
             Host.FormSpec confirm = new Host.FormSpec();
             confirm.title = "Enter verification code";
             confirm.submitText = "Verify";
-            confirm.intro = "We sent a code to " + phone[0] + ".";
+            confirm.intro = I18n.t("We sent a code to {to}.", "to", phone[0]);
             confirm.fields = list(Field.text("code", "Code").req().w(12));
             confirm.onSubmit = v -> host.api().post("/account/phone-verification/confirm", Json.obj("phone", phone[0], "code", v.optString("code")));
             confirm.onDone = () -> {
@@ -281,7 +288,7 @@ final class SettingsDefs {
             Host.FormSpec f = new Host.FormSpec();
             f.title = "Two-step verification";
             f.submitText = "Enable";
-            f.intro = "Add this key to Google Authenticator or a similar app, then enter the 6-digit code it shows.\n\nKey: " + setup.optString("secret");
+            f.intro = I18n.t("Add this key to Google Authenticator or a similar app, then enter the 6-digit code it shows.") + "\n\n" + I18n.t("Key") + ": " + setup.optString("secret");
             f.linkLabel = "Open in authenticator app";
             f.linkUrl = setup.optString("otpauth_url");
             f.fields = list(Field.text("code", "6-digit code").req().w(12));
@@ -289,7 +296,7 @@ final class SettingsDefs {
             f.onDone = () -> {
                 StringBuilder codes = new StringBuilder();
                 for (Object c : Json.values(enabled[0] == null ? null : enabled[0].opt("recovery_codes"))) codes.append(c).append('\n');
-                host.message("Recovery codes", "Two-step verification is on. Keep these recovery codes somewhere safe:\n\n" + codes);
+                host.message(I18n.t("Recovery codes"), I18n.t("Two-step verification is on. Keep these recovery codes somewhere safe:") + "\n\n" + codes);
                 host.refreshUser();
             };
             host.form(f);

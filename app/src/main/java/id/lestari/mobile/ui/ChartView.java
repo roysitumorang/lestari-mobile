@@ -9,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import id.lestari.mobile.core.Format;
+import id.lestari.mobile.core.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,7 +86,7 @@ public final class ChartView extends View {
         if (labels.isEmpty()) {
             paint.setColor(Theme.muted);
             paint.setTextSize(14 * d);
-            canvas.drawText("No data for this period", 8 * d, top + 40 * d, paint);
+            canvas.drawText(I18n.t("No data for this period"), 8 * d, top + 40 * d, paint);
             return;
         }
         float L = 44 * d, R = 8 * d, B = 24 * d;

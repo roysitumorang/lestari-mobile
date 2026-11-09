@@ -34,7 +34,7 @@ public final class Page {
     // ---- crud ----
     public List<String> ops = new ArrayList<>(Arrays.asList("list", "create", "read", "update", "delete"));
     public List<Opt> importModes;
-    public String searchPlaceholder = "Search";
+    public String searchPlaceholder = I18n.t("Search");
     public List<Field> columns;
     public List<Field> detailFields;
     public String tabsKey;
@@ -74,7 +74,7 @@ public final class Page {
     public Page(Kind kind, String id, String title) {
         this.kind = kind;
         this.id = id;
-        this.title = title;
+        this.title = I18n.t(title);
     }
 
     public boolean has(String op) {
@@ -101,11 +101,11 @@ public final class Page {
     // ---- builder helpers ----
 
     public Page ops(String... o) { ops = new ArrayList<>(Arrays.asList(o)); return this; }
-    public Page desc(String d) { description = d; return this; }
-    public Page singular(String s) { singular = s; return this; }
+    public Page desc(String d) { description = I18n.t(d); return this; }
+    public Page singular(String s) { singular = I18n.t(s); return this; }
     public Page endpoint(String e) { endpoint = e; return this; }
     public Page plugin(String p) { plugin = p; return this; }
-    public Page search(String placeholder) { searchPlaceholder = placeholder; search = placeholder; return this; }
+    public Page search(String placeholder) { searchPlaceholder = I18n.t(placeholder); search = searchPlaceholder; return this; }
     public Page fields(Field... f) { fields = new ArrayList<>(Arrays.asList(f)); return this; }
     public Page fields(List<Field> f) { fields = f; return this; }
     public Page columns(Field... c) { columns = new ArrayList<>(Arrays.asList(c)); return this; }
@@ -130,7 +130,7 @@ public final class Page {
     public Page noExport() { export = false; return this; }
     public Page chart(Chart c) { chart = c; return this; }
     public Page detail(Detail d) { detail = d; return this; }
-    public Page groupBy(String key, String label, List<Opt> options) { groupByKey = key; groupByLabel = label; groupBy = options; return this; }
+    public Page groupBy(String key, String label, List<Opt> options) { groupByKey = key; groupByLabel = I18n.t(label); groupBy = options; return this; }
     public Page method(String m) { method = m; return this; }
     public Page afterSave(AfterSave a) { afterSave = a; return this; }
     public Page below(Below b) { below = b; return this; }
@@ -146,7 +146,7 @@ public final class Page {
         public final List<String[]> series = new ArrayList<>();
 
         public Chart(String title, String type, String label, String source, String format) {
-            this.title = title;
+            this.title = I18n.t(title);
             this.type = type;
             this.label = label;
             this.source = source;
@@ -154,7 +154,7 @@ public final class Page {
         }
 
         public Chart series(String key, String name) {
-            series.add(new String[]{key, name});
+            series.add(new String[]{key, I18n.t(name)});
             return this;
         }
     }
@@ -170,7 +170,7 @@ public final class Page {
 
         public Detail(String endpoint, String title) {
             this.endpoint = endpoint;
-            this.title = title;
+            this.title = I18n.t(title);
         }
 
         public Detail fields(Field... f) { fields = new ArrayList<>(Arrays.asList(f)); return this; }
@@ -189,25 +189,25 @@ public final class Page {
         public final List<Field> columns;
         public String dataKey;
         public String endpoint;
-        public String emptyText = "Nothing yet";
+        public String emptyText = I18n.t("Nothing yet");
         public boolean numbered;
 
         public Below(String title, List<Field> columns) {
-            this.title = title;
+            this.title = I18n.t(title);
             this.columns = columns;
         }
 
         public static Below fromData(String title, String key, String empty, Field... cols) {
             Below b = new Below(title, Arrays.asList(cols));
             b.dataKey = key;
-            b.emptyText = empty;
+            b.emptyText = I18n.t(empty);
             return b;
         }
 
         public static Below fromEndpoint(String title, String endpoint, String empty, Field... cols) {
             Below b = new Below(title, Arrays.asList(cols));
             b.endpoint = endpoint;
-            b.emptyText = empty;
+            b.emptyText = I18n.t(empty);
             return b;
         }
 

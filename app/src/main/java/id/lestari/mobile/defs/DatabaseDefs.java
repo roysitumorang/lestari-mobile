@@ -16,6 +16,7 @@ import static id.lestari.mobile.defs.Common.list;
 
 import id.lestari.mobile.core.Action;
 import id.lestari.mobile.core.Field;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Opt;
 import id.lestari.mobile.core.Page;
@@ -119,7 +120,7 @@ final class DatabaseDefs {
                                         Field.money("unit_cost", "Unit cost (for added stock)").showIf("mode", "add"),
                                         Field.select("reason", "Reason", Opt.of("correction", "damaged", "expired", "lost", "received", "other")),
                                         Field.textarea("note", "Note")),
-                        Action.custom("history", "Movement history", (host, row, ctx) -> host.table("Stock history · " + row.optString("name"),
+                        Action.custom("history", "Movement history", (host, row, ctx) -> host.table(I18n.t("Stock history") + " · " + row.optString("name"),
                                 "/inventory/stocks/" + row.optString("product_id") + "/movements", perPage100(),
                                 list(Field.col("created_at", "Date", "datetime"), Field.col("type", "Type", "badge"), Field.col("reference", "Reference"),
                                         Field.col("quantity_change", "Change", "number"), Field.col("stock_after", "Stock after", "number"), Field.col("actor_name", "By")),
@@ -154,7 +155,7 @@ final class DatabaseDefs {
                         Action.call("points", "Adjust points", "POST", "/customers/{id}/points").success("Points updated")
                                 .form(Field.select("mode", "Mode", Opt.pairs("add", "Add", "subtract", "Subtract")).req().def("add"),
                                         Field.number("points", "Points").req().min(1), Field.textarea("note", "Note")),
-                        Action.custom("point_history", "Point history", (host, row, ctx) -> host.table("Point history · " + row.optString("name"),
+                        Action.custom("point_history", "Point history", (host, row, ctx) -> host.table(I18n.t("Point history") + " · " + row.optString("name"),
                                 "/customers/" + row.optString("id") + "/point-history", perPage100(),
                                 list(Field.col("created_at", "Date", "datetime"), Field.col("type", "Type", "badge"), Field.col("points", "Points", "number"),
                                         Field.col("balance_after", "Balance", "number"), Field.col("reference", "Reference"), Field.col("note", "Note")),

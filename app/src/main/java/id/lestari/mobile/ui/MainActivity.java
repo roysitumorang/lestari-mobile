@@ -35,6 +35,7 @@ import id.lestari.mobile.core.ApiException;
 import id.lestari.mobile.core.Field;
 import id.lestari.mobile.core.FileRef;
 import id.lestari.mobile.core.Host;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Lookup;
 import id.lestari.mobile.core.Page;
@@ -89,7 +90,7 @@ public final class MainActivity extends Activity implements Host {
         Theme.apply(display.optString("color_theme", "emerald"));
         buildChrome();
         api().setListener(() -> LestariApp.get().main().post(() -> {
-            toast("Session expired, please sign in again.");
+            toast(I18n.t("Session expired, please sign in again."));
             showLogin();
         }));
         if (api().signedIn()) showHome(true);
@@ -184,6 +185,30 @@ public final class MainActivity extends Activity implements Host {
         if (current != null) open(current);
     }
 
+    /** After signing in: follow the account's language, then open the home screen. */
+    public void signedInWithLanguage(String lang) {
+        if (LestariApp.get().setLanguage(lang)) registry = Defs.get();
+        showHome(true);
+    }
+
+    /**
+     * Switch language from the menu or the sign-in screen: rebuild the definitions and every screen, and (when
+     * signed in) store the choice in the account's display settings so the web back office follows.
+     */
+    public void changeLanguage(String lang) {
+        if (!LestariApp.get().setLanguage(lang)) return;
+        registry = Defs.get();
+        if (!api().signedIn()) {
+            showLogin();
+            return;
+        }
+        JSONObject display = parse(api().store().get(Api.K_THEME));
+        Json.put(display, "language", lang);
+        api().store().set(Api.K_THEME, display.toString());
+        runQuietly(() -> api().put("/settings/display", Json.obj("language", lang)), r -> {}, null);
+        restart();
+    }
+
     private void clearStack() {
         for (Screen s : stack) {
             s.alive = false;
@@ -222,7 +247,7 @@ public final class MainActivity extends Activity implements Host {
         toolbar.setTitle(top.title());
         if (stack.size() > 1) {
             toolbar.setNavigationIcon(Icons.of(Icons.Shape.BACK, Theme.onPrimary, Ui.dp(this, 24)));
-            toolbar.setNavigationContentDescription("Back");
+            toolbar.setNavigationContentDescription(I18n.t("Back"));
         } else {
             toolbar.setNavigationIcon(null);
         }
@@ -276,7 +301,7 @@ public final class MainActivity extends Activity implements Host {
     public void open(String pageId) {
         Page p = registry.page(pageId);
         if (p == null) {
-            toast("Unknown page: " + pageId);
+            toast(I18n.t("Unknown page") + ": " + pageId);
             return;
         }
         Screen top = stack.isEmpty() ? null : stack.get(stack.size() - 1);
@@ -356,43 +381,47 @@ public final class MainActivity extends Activity implements Host {
 
     @Override
     public void toast(String message) {
-        onMain(() -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
+        onMain(() -> Toast.makeText(this, I18n.t(message), Toast.LENGTH_SHORT).show());
     }
 
     @Override
     public void error(Throwable e) {
         if (e instanceof ApiException && ((ApiException) e).status == 401 && !api().signedIn()) return; // sign-in screen follows
-        String msg = e.getMessage() == null ? "Something went wrong" : e.getMessage();
+        String msg = e.getMessage() == null ? I18n.t("Something went wrong") : e.getMessage();
         onMain(() -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show());
     }
 
     @Override
     public void confirm(String title, String message, String okText, boolean danger, String typeToConfirm, Runnable onOk) {
-        onMain(() -> Dialogs.confirm(this, title, message, okText, danger, typeToConfirm, onOk));
+        onMain(() -> Dialogs.confirm(this, I18n.t(title), I18n.t(message), I18n.t(okText), danger, typeToConfirm, onOk));
     }
 
     @Override
     public void form(FormSpec spec) {
+        spec.title = I18n.t(spec.title);
+        spec.submitText = I18n.t(spec.submitText);
+        spec.intro = I18n.t(spec.intro);
+        spec.linkLabel = I18n.t(spec.linkLabel);
         onMain(() -> push(new FormScreen(this, spec)));
     }
 
     @Override
     public void table(String title, String path, Map<String, Object> query, List<Field> columns, String emptyText) {
-        onMain(() -> push(new TableScreen(this, title, path, query, columns, emptyText)));
+        onMain(() -> push(new TableScreen(this, I18n.t(title), path, query, columns, I18n.t(emptyText))));
     }
 
     @Override
     public void message(String title, String text) {
         onMain(() -> {
-            TextView t = Ui.body(this, text);
+            TextView t = Ui.body(this, I18n.t(text));
             t.setTextIsSelectable(true);
             int p = Ui.dp(this, 22);
             t.setPadding(p, Ui.dp(this, 8), p, 0);
-            Dialogs.alert(this).setTitle(title).setView(t).setPositiveButton("Close", null)
-                    .setNeutralButton("Copy", (d, w) -> {
+            Dialogs.alert(this).setTitle(I18n.t(title)).setView(t).setPositiveButton(I18n.t("Close"), null)
+                    .setNeutralButton(I18n.t("Copy"), (d, w) -> {
                         ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                         if (cm != null) cm.setPrimaryClip(ClipData.newPlainText(title, text));
-                        toast("Copied");
+                        toast(I18n.t("Copied"));
                     }).show();
         });
     }
@@ -404,7 +433,7 @@ public final class MainActivity extends Activity implements Host {
             try {
                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
             } catch (ActivityNotFoundException e) {
-                toast("No app can open " + url);
+                toast(I18n.t("No app can open {item}", "item", url));
             }
         });
     }
@@ -420,19 +449,19 @@ public final class MainActivity extends Activity implements Host {
             cv.put(MediaStore.MediaColumns.MIME_TYPE, file.mimeType);
             cv.put(MediaStore.MediaColumns.IS_PENDING, 1);
             Uri uri = cr.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
-            if (uri == null) throw new IllegalStateException("Downloads is not available");
+            if (uri == null) throw new IllegalStateException(I18n.t("Downloads is not available"));
             try (OutputStream os = cr.openOutputStream(uri)) {
-                if (os == null) throw new IllegalStateException("Cannot write the file");
+                if (os == null) throw new IllegalStateException(I18n.t("Cannot write the file"));
                 os.write(file.bytes);
             }
             cv.clear();
             cv.put(MediaStore.MediaColumns.IS_PENDING, 0);
             cr.update(uri, cv, null, null);
             onMain(() -> {
-                Toast.makeText(this, "Saved to Downloads: " + name, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, I18n.t("Saved to Downloads") + ": " + name, Toast.LENGTH_SHORT).show();
                 Intent view = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, file.mimeType).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 try {
-                    startActivity(Intent.createChooser(view, "Open " + name));
+                    startActivity(Intent.createChooser(view, I18n.t("Open {item}", "item", name)));
                 } catch (ActivityNotFoundException ignored) {
                     // saved; nothing installed to open it
                 }
@@ -452,7 +481,7 @@ public final class MainActivity extends Activity implements Host {
     public void switchBranch(String branchId) {
         api().store().set(Api.K_BRANCH, branchId);
         Lookup.clearCache();
-        toast("Switched branch");
+        toast(I18n.t("Switched branch"));
         run(() -> api().get("/auth/me").optJSONObject("data"), me -> {
             if (me != null) api().store().set(Api.K_USER, me.toString());
             restart();
@@ -484,6 +513,7 @@ public final class MainActivity extends Activity implements Host {
         api().store().set(Api.K_THEME, display.toString());
         onMain(() -> {
             Theme.apply(display.optString("color_theme", "emerald"));
+            if (LestariApp.get().setLanguage(display.optString("language"))) registry = Defs.get();
             restart();
         });
     }
@@ -535,7 +565,7 @@ public final class MainActivity extends Activity implements Host {
             startActivityForResult(i, code);
         } catch (ActivityNotFoundException e) {
             pickers.remove(code);
-            toast("No file picker available");
+            toast(I18n.t("No file picker available"));
         }
     }
 
@@ -555,12 +585,12 @@ public final class MainActivity extends Activity implements Host {
         try (Cursor c = cr.query(uri, new String[]{OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE}, null, null, null)) {
             if (c != null && c.moveToFirst()) {
                 name = c.getString(0);
-                if (!c.isNull(1) && c.getLong(1) > 20L * 1024 * 1024) throw new IllegalArgumentException("The file is larger than 20 MB.");
+                if (!c.isNull(1) && c.getLong(1) > 20L * 1024 * 1024) throw new IllegalArgumentException(I18n.t("The file is larger than 20 MB."));
             }
         }
         String mime = cr.getType(uri);
         try (InputStream in = cr.openInputStream(uri)) {
-            if (in == null) throw new IllegalStateException("Cannot read the file");
+            if (in == null) throw new IllegalStateException(I18n.t("Cannot read the file"));
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             byte[] buf = new byte[16384];
             int n;

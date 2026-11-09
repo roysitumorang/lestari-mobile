@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import id.lestari.mobile.core.Api;
 import id.lestari.mobile.core.ApiException;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 
 import org.json.JSONObject;
@@ -26,13 +27,16 @@ public final class LoginScreen extends Screen {
     private LinearLayout otpBox;
     private Button go;
 
+    /** Language picked on this screen (kept across the rebuild the switch causes). */
+    static String chosenLanguage;
+
     public LoginScreen(MainActivity act) {
         super(act);
     }
 
     @Override
     public String title() {
-        return "Sign in";
+        return I18n.t("Sign in");
     }
 
     private EditText input(String hint, int type) {
@@ -59,46 +63,60 @@ public final class LoginScreen extends Screen {
         LinearLayout box = Ui.vbox(ctx);
         int p = Ui.dp(ctx, 24);
         box.setPadding(p, p, p, p);
-        TextView brand = Ui.text(ctx, "Lestari Back Office", 24, Theme.primary, true);
+        TextView brand = Ui.text(ctx, I18n.t("Lestari Back Office"), 24, Theme.primary, true);
         brand.setGravity(Gravity.CENTER);
         box.addView(brand, Ui.match());
-        TextView sub = Ui.muted(ctx, "Sign in with your owner or staff account.");
+        TextView sub = Ui.muted(ctx, I18n.t("Sign in with your owner or staff account."));
         sub.setGravity(Gravity.CENTER);
         sub.setPadding(0, Ui.dp(ctx, 4), 0, Ui.dp(ctx, 12));
         box.addView(sub, Ui.match());
 
+        // EN | ID switcher; a choice made here is pushed to the account after signing in
+        LinearLayout langs = Ui.hbox(ctx);
+        langs.setGravity(Gravity.CENTER);
+        for (String[] l : new String[][]{{I18n.EN, "English"}, {I18n.ID, "Bahasa Indonesia"}}) {
+            boolean on = l[0].equals(I18n.lang());
+            Button b = Ui.button(ctx, l[1], on ? Ui.Style.PRIMARY : Ui.Style.OUTLINE, v -> {
+                if (l[0].equals(I18n.lang())) return;
+                chosenLanguage = l[0];
+                act.changeLanguage(l[0]);
+            });
+            langs.addView(b, Ui.margins(Ui.wrap(), ctx, 4, 0, 4, 0));
+        }
+        box.addView(langs, Ui.margins(Ui.match(), ctx, 0, 0, 0, 12));
+
         LinearLayout card = Ui.card(ctx);
-        label(card, "Email");
+        label(card, I18n.t("Email"));
         email = input("you@store.com", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         card.addView(email, Ui.match());
-        label(card, "Password");
+        label(card, I18n.t("Password"));
         password = input("", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         card.addView(password, Ui.match());
         otpBox = Ui.vbox(ctx);
-        label(otpBox, "Code from your authenticator app");
+        label(otpBox, I18n.t("Code from your authenticator app"));
         otp = input("000000", InputType.TYPE_CLASS_NUMBER);
         otpBox.addView(otp, Ui.match());
         otpBox.setVisibility(View.GONE);
         card.addView(otpBox, Ui.match());
         remember = new Switch(ctx);
-        remember.setText("Remember me");
+        remember.setText(I18n.t("Remember me"));
         remember.setTextColor(Theme.text);
         remember.setChecked(true);
         card.addView(remember, Ui.margins(Ui.match(), ctx, 0, 12, 0, 0));
         error = Ui.text(ctx, "", 14, Theme.danger, false);
         error.setVisibility(View.GONE);
         card.addView(error, Ui.margins(Ui.match(), ctx, 0, 8, 0, 0));
-        go = Ui.button(ctx, "Sign in", Ui.Style.PRIMARY, v -> signIn());
+        go = Ui.button(ctx, I18n.t("Sign in"), Ui.Style.PRIMARY, v -> signIn());
         card.addView(go, Ui.margins(Ui.match(), ctx, 0, 16, 0, 0));
         box.addView(card, Ui.match());
 
         LinearLayout srv = Ui.card(ctx);
-        srv.addView(Ui.text(ctx, "Server", 13, Theme.muted, false));
+        srv.addView(Ui.text(ctx, I18n.t("Server"), 13, Theme.muted, false));
         server = input(Api.DEFAULT_BASE_URL, InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         server.setText(act.api().baseUrl());
         srv.addView(server, Ui.margins(Ui.match(), ctx, 0, 4, 0, 0));
-        TextView hint = Ui.muted(ctx, "Your Lestari API address, e.g. https://backoffice.example.com/api/v1. "
-                + "The Android emulator reaches a backend on your computer at http://10.0.2.2:8080/api/v1.");
+        TextView hint = Ui.muted(ctx, I18n.t("Your Lestari API address, e.g. https://backoffice.example.com/api/v1.") + " "
+                + I18n.t("The Android emulator reaches a backend on your computer at http://10.0.2.2:8080/api/v1."));
         hint.setPadding(0, Ui.dp(ctx, 6), 0, 0);
         srv.addView(hint);
         box.addView(srv, Ui.margins(Ui.match(), ctx, 0, 16, 0, 0));
@@ -112,13 +130,13 @@ public final class LoginScreen extends Screen {
         String mail = email.getText().toString().trim();
         String pw = password.getText().toString();
         if (mail.isEmpty() || pw.isEmpty()) {
-            showError("Enter your email and password.");
+            showError(I18n.t("Enter your email and password."));
             return;
         }
         final JSONObject body = Json.obj("email", mail, "password", Api.encodePassword(pw), "remember_me", remember.isChecked());
         if (otpBox.getVisibility() == View.VISIBLE) Json.put(body, "otp", otp.getText().toString().trim());
         go.setEnabled(false);
-        go.setText("Signing in…");
+        go.setText(I18n.t("Signing in…"));
         error.setVisibility(View.GONE);
         load(() -> {
             JSONObject d = act.api().post("/auth/login", body).getJSONObject("data");
@@ -130,6 +148,11 @@ public final class LoginScreen extends Screen {
             s.set(Api.K_USER, user == null ? "{}" : user.toString());
             try {
                 JSONObject display = act.api().get("/settings/display").optJSONObject("data");
+                if (display != null && chosenLanguage != null) {
+                    // the language picked on the sign-in screen wins over the account's stored one
+                    act.api().put("/settings/display", Json.obj("language", chosenLanguage));
+                    Json.put(display, "language", chosenLanguage);
+                }
                 if (display != null) s.set(Api.K_THEME, display.toString());
             } catch (ApiException ignored) {
                 // appearance is optional
@@ -143,14 +166,15 @@ public final class LoginScreen extends Screen {
                 // default theme
             }
             Theme.apply(display.optString("color_theme", "emerald"));
-            act.showHome(true);
+            chosenLanguage = null;
+            act.signedInWithLanguage(display.optString("language"));
         }, e -> {
             go.setEnabled(true);
-            go.setText("Sign in");
+            go.setText(I18n.t("Sign in"));
             if (e instanceof ApiException && "two_factor_required".equals(((ApiException) e).code)) {
                 otpBox.setVisibility(View.VISIBLE);
                 otp.requestFocus();
-                showError("Enter the code from your authenticator app.");
+                showError(I18n.t("Enter the code from your authenticator app."));
             } else {
                 showError(e.getMessage());
             }

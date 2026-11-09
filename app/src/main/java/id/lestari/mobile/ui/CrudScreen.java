@@ -17,6 +17,7 @@ import id.lestari.mobile.core.Field;
 import id.lestari.mobile.core.FileRef;
 import id.lestari.mobile.core.Format;
 import id.lestari.mobile.core.Host;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Lookup;
 import id.lestari.mobile.core.Opt;
@@ -107,7 +108,7 @@ public final class CrudScreen extends Screen implements Action.Ctx {
         });
         tools.addView(search, Ui.weight(1));
         if (!def.filters.isEmpty()) {
-            Button toggle = Ui.button(ctx, "Filters", Ui.Style.OUTLINE, v ->
+            Button toggle = Ui.button(ctx, I18n.t("Filters"), Ui.Style.OUTLINE, v ->
                     filterBox.setVisibility(filterBox.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE));
             tools.addView(toggle, Ui.margins(Ui.wrap(), ctx, 8, 0, 0, 0));
         }
@@ -197,7 +198,7 @@ public final class CrudScreen extends Screen implements Action.Ctx {
     private void drawRows() {
         list.removeAllViews();
         if (rows.isEmpty()) {
-            list.addView(Ui.empty(ctx, "No " + def.title.toLowerCase() + " yet"));
+            list.addView(Ui.empty(ctx, I18n.t("No data yet")));
             return;
         }
         List<Field> cols = def.listColumns();
@@ -226,17 +227,17 @@ public final class CrudScreen extends Screen implements Action.Ctx {
         final int pg = m.optInt("page", 1);
         final int pages = Math.max(1, m.optInt("total_pages", 1));
         int total = m.optInt("total", rows.size());
-        Button prev = Ui.button(ctx, "‹ Prev", Ui.Style.TEXT, v -> {
+        Button prev = Ui.button(ctx, "‹ " + I18n.t("Previous"), Ui.Style.TEXT, v -> {
             page = pg - 1;
             reload();
         });
         prev.setEnabled(pg > 1);
-        Button next = Ui.button(ctx, "Next ›", Ui.Style.TEXT, v -> {
+        Button next = Ui.button(ctx, I18n.t("Next") + " ›", Ui.Style.TEXT, v -> {
             page = pg + 1;
             reload();
         });
         next.setEnabled(pg < pages);
-        TextView info = Ui.muted(ctx, "Page " + pg + " of " + pages + " · " + Format.number(total));
+        TextView info = Ui.muted(ctx, I18n.t("Page {page} of {pages} · {total} rows", "page", pg, "pages", pages, "total", Format.number(total)));
         info.setGravity(Gravity.CENTER);
         pager.addView(prev, Ui.wrap());
         pager.addView(info, Ui.weight(1));
@@ -268,25 +269,25 @@ public final class CrudScreen extends Screen implements Action.Ctx {
     public List<ToolItem> menu() {
         List<ToolItem> m = new ArrayList<>();
         if (selecting) {
-            m.add(new ToolItem("Delete (" + selected.size() + ")", true, this::bulkDelete));
+            m.add(new ToolItem(I18n.t("Delete selected") + " (" + selected.size() + ")", true, this::bulkDelete));
             return m;
         }
-        if (def.has("create")) m.add(new ToolItem(def.createLabel != null ? def.createLabel : "Add", true, () -> openForm(null)));
+        if (def.has("create")) m.add(new ToolItem(def.createLabel != null ? def.createLabel : I18n.t("Add"), true, () -> openForm(null)));
         for (final Action a : def.toolbar) m.add(new ToolItem(a.label, false, () -> a.run(act, null, this)));
-        if (def.has("import")) m.add(new ToolItem("Import", false, this::importDialog));
-        if (def.has("export")) m.add(new ToolItem("Export", false, this::export));
-        m.add(new ToolItem("Sort…", false, this::chooseSort));
-        m.add(new ToolItem("Rows per page…", false, () -> Dialogs.pick(ctx, "Rows per page", Opt.pairs(10, "10", 25, "25", 50, "50", 100, "100"), false, o -> {
+        if (def.has("import")) m.add(new ToolItem(I18n.t("Import"), false, this::importDialog));
+        if (def.has("export")) m.add(new ToolItem(I18n.t("Export"), false, this::export));
+        m.add(new ToolItem(I18n.t("Sort…"), false, this::chooseSort));
+        m.add(new ToolItem(I18n.t("Rows per page…"), false, () -> Dialogs.pick(ctx, I18n.t("Rows per page"), Opt.pairs(10, "10", 25, "25", 50, "50", 100, "100"), false, o -> {
             perPage = ((Number) o.value).intValue();
             page = 1;
             reload();
         })));
-        if (def.has("bulk_delete") && !def.readOnly) m.add(new ToolItem("Select…", false, () -> {
+        if (def.has("bulk_delete") && !def.readOnly) m.add(new ToolItem(I18n.t("Select…"), false, () -> {
             selecting = true;
-            act.toast("Tap rows to select them");
+            act.toast(I18n.t("Tap rows to select them"));
             refreshMenu();
         }));
-        m.add(new ToolItem("Refresh", false, this::reload));
+        m.add(new ToolItem(I18n.t("Refresh"), false, this::reload));
         return m;
     }
 
@@ -297,7 +298,7 @@ public final class CrudScreen extends Screen implements Action.Ctx {
             opts.add(new Opt(c.key + "|asc", c.label + " ↑"));
             opts.add(new Opt(c.key + "|desc", c.label + " ↓"));
         }
-        Dialogs.pick(ctx, "Sort by", opts, true, o -> {
+        Dialogs.pick(ctx, I18n.t("Sort by"), opts, true, o -> {
             if (o.value == null) {
                 sort = def.defaultSort;
                 order = def.defaultOrder;
@@ -326,11 +327,11 @@ public final class CrudScreen extends Screen implements Action.Ctx {
         final List<String> labels = new ArrayList<>();
         final List<Runnable> runs = new ArrayList<>();
         if (def.has("read")) {
-            labels.add("View details");
+            labels.add(I18n.t("View details"));
             runs.add(() -> view(row));
         }
         if (def.has("update") && !def.readOnly) {
-            labels.add("Edit");
+            labels.add(I18n.t("Edit"));
             runs.add(() -> edit(row));
         }
         for (final Action a : def.rowActions) {
@@ -339,11 +340,11 @@ public final class CrudScreen extends Screen implements Action.Ctx {
             runs.add(() -> a.run(act, row, this));
         }
         if (def.has("delete") && !def.readOnly) {
-            labels.add("Delete");
+            labels.add(I18n.t("Delete"));
             runs.add(() -> delete(row));
         }
         if (labels.isEmpty()) {
-            act.toast("No actions for this row");
+            act.toast(I18n.t("No actions for this row"));
             return;
         }
         if (labels.size() == 1 && def.has("read")) {
@@ -372,7 +373,7 @@ public final class CrudScreen extends Screen implements Action.Ctx {
 
     private void openForm(final JSONObject row) {
         Host.FormSpec spec = new Host.FormSpec();
-        spec.title = (row != null ? "Edit " : "Add ") + def.singularOrTitle();
+        spec.title = I18n.t(row != null ? "Edit {item}" : "Add {item}", "item", def.singularOrTitle());
         spec.fields = def.fields;
         spec.values = row != null ? row : new JSONObject();
         spec.onSubmit = values -> {
@@ -390,9 +391,9 @@ public final class CrudScreen extends Screen implements Action.Ctx {
     private void delete(final JSONObject row) {
         String name = Json.str(row, def.titleKey);
         if (name.isEmpty()) name = "#" + id(row);
-        Dialogs.confirm(ctx, "Delete", "Delete \"" + name + "\"? This cannot be undone.", "Delete", true, null, () ->
+        Dialogs.confirm(ctx, I18n.t("Delete"), "Delete \"" + name + "\"? This cannot be undone.", I18n.t("Delete"), true, null, () ->
                 act.run(() -> act.api().delete(path(row)), r -> {
-                    act.toast("Deleted");
+                    act.toast(I18n.t("Deleted"));
                     Lookup.clearCache();
                     reload();
                 }));
@@ -401,7 +402,7 @@ public final class CrudScreen extends Screen implements Action.Ctx {
     private void bulkDelete() {
         final JSONArray ids = new JSONArray();
         for (int i : selected) ids.put(rows.get(i).opt(def.idKey));
-        Dialogs.confirm(ctx, "Delete", "Delete " + ids.length() + " selected item(s)? This cannot be undone.", "Delete", true, null, () ->
+        Dialogs.confirm(ctx, I18n.t("Delete"), I18n.t("Delete {n} selected item(s)? This cannot be undone.", "n", ids.length()), I18n.t("Delete"), true, null, () ->
                 act.run(() -> act.api().post(def.endpoint + "/bulk-delete", Json.obj("ids", ids)), r -> {
                     act.toast(ids.length() + " item(s) deleted");
                     act.setTitleText(def.title);
@@ -417,7 +418,7 @@ public final class CrudScreen extends Screen implements Action.Ctx {
         qy.remove("page");
         qy.remove("per_page");
         qy.put("format", "xlsx");
-        act.toast("Preparing export…");
+        act.toast(I18n.t("Preparing export…"));
         act.run(() -> {
             act.saveFile(act.api().download(def.endpoint + "/export", qy), def.id + ".xlsx");
             return Boolean.TRUE;
@@ -426,9 +427,9 @@ public final class CrudScreen extends Screen implements Action.Ctx {
 
     private void importDialog() {
         List<String> items = new ArrayList<>();
-        items.add("Download template");
-        items.add("Upload a filled-in file…");
-        Dialogs.sheet(ctx, "Import " + def.title, items, w -> {
+        items.add(I18n.t("Download template"));
+        items.add(I18n.t("Upload a filled-in file…"));
+        Dialogs.sheet(ctx, I18n.t("Import {item}", "item", def.title), items, w -> {
             if (w == 0) {
                 act.run(() -> {
                     act.saveFile(act.api().download(def.endpoint + "/import-template", new LinkedHashMap<>()), def.id + "-template.xlsx");
@@ -438,12 +439,12 @@ public final class CrudScreen extends Screen implements Action.Ctx {
             }
             final JSONObject[] result = {null};
             Host.FormSpec spec = new Host.FormSpec();
-            spec.title = "Import " + def.title;
-            spec.submitText = "Upload";
-            spec.intro = "Upload an .xlsx or .csv file that follows the template.";
+            spec.title = I18n.t("Import {item}", "item", def.title);
+            spec.submitText = I18n.t("Upload");
+            spec.intro = I18n.t("Upload an .xlsx or .csv file that follows the template.");
             List<Field> fs = new ArrayList<>();
-            if (def.importModes != null) fs.add(Field.select("mode", "Mode", def.importModes).def(def.importModes.get(0).value).req().w(12));
-            fs.add(Field.file("file", "File").accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/comma-separated-values").req().w(12));
+            if (def.importModes != null) fs.add(Field.select("mode", I18n.t("Mode"), def.importModes).def(def.importModes.get(0).value).req().w(12));
+            fs.add(Field.file("file", I18n.t("File")).accept("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,text/comma-separated-values").req().w(12));
             spec.fields = fs;
             spec.onSubmit = values -> {
                 Api.Multipart mp = new Api.Multipart();
@@ -454,10 +455,10 @@ public final class CrudScreen extends Screen implements Action.Ctx {
             };
             spec.onDone = () -> {
                 JSONObject r = result[0] == null ? new JSONObject() : result[0];
-                StringBuilder sb = new StringBuilder("Created " + r.optInt("created") + ", updated " + r.optInt("updated") + ", failed " + r.optInt("failed") + ".");
+                StringBuilder sb = new StringBuilder(I18n.t("Created {created}, updated {updated}, failed {failed}.", "created", r.optInt("created"), "updated", r.optInt("updated"), "failed", r.optInt("failed")));
                 List<JSONObject> errs = Json.objects(r.opt("errors"));
                 for (int k = 0; k < Math.min(20, errs.size()); k++) sb.append("\nRow ").append(errs.get(k).optInt("row")).append(": ").append(Json.str(errs.get(k), "message"));
-                act.message("Import finished", sb.toString());
+                act.message(I18n.t("Import finished"), sb.toString());
                 Lookup.clearCache();
                 reload();
             };

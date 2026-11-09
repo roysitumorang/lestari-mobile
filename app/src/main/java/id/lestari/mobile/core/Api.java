@@ -50,6 +50,8 @@ public final class Api {
     public static final String K_USER = "user";
     public static final String K_BRANCH = "branch_id";
     public static final String K_THEME = "display";
+    /** "en" or "id"; sent as Accept-Language. */
+    public static final String K_LANG = "lang";
 
     /** Android emulator → host machine. Change it on the sign-in screen. */
     public static final String DEFAULT_BASE_URL = "http://10.0.2.2:8080/api/v1";
@@ -176,14 +178,14 @@ public final class Api {
         try {
             r = exchange(method, buildUrl(path, query), body, contentType, store.get(K_TOKEN));
         } catch (IOException e) {
-            throw new ApiException(0, "network_error", "Cannot reach the server at " + baseUrl());
+            throw new ApiException(0, "network_error", I18n.t("Cannot reach the server at {url}", "url", baseUrl()));
         }
         if (r.status == 401 && mayRefresh && !path.equals("/auth/login") && !path.equals("/auth/refresh")) {
             if (refresh()) return send(method, path, query, body, contentType, false);
             clearSession();
             Listener l = listener;
             if (l != null) l.onSignedOut();
-            throw new ApiException(401, "unauthenticated", "Session expired, please sign in again.");
+            throw new ApiException(401, "unauthenticated", I18n.t("Session expired, please sign in again."));
         }
         if (r.status >= 400) throw ApiException.from(r.status, r.jsonOrNull());
         return r;
@@ -219,6 +221,7 @@ public final class Api {
             c.setReadTimeout(120000);
             setMethod(c, method);
             c.setRequestProperty("Accept", "application/json");
+            c.setRequestProperty("Accept-Language", I18n.lang());
             if (token != null && !token.isEmpty()) c.setRequestProperty("Authorization", "Bearer " + token);
             String branch = store.get(K_BRANCH);
             if (branch != null && !branch.isEmpty()) c.setRequestProperty("X-Branch-Id", branch);
@@ -300,7 +303,7 @@ public final class Api {
         JSONObject json() throws ApiException {
             if (status == 204 || body.length == 0) return Json.obj("data", null);
             JSONObject o = jsonOrNull();
-            if (o == null) throw new ApiException(status, "bad_response", "The server sent an unexpected response.");
+            if (o == null) throw new ApiException(status, "bad_response", I18n.t("The server sent an unexpected response."));
             return o;
         }
 

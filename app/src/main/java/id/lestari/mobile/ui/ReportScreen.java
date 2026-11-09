@@ -15,6 +15,7 @@ import android.widget.TextView;
 import id.lestari.mobile.core.Action;
 import id.lestari.mobile.core.Field;
 import id.lestari.mobile.core.Format;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Opt;
 import id.lestari.mobile.core.Page;
@@ -30,8 +31,8 @@ import java.util.Map;
 
 /** Generic report screen: period + filters → summary cards, chart, rows, totals, paging and export. */
 public final class ReportScreen extends Screen implements Action.Ctx {
-    private static final List<Opt> PRESETS = Opt.pairs("today", "Today", "yesterday", "Yesterday", "last_7_days", "Last 7 days",
-            "last_30_days", "Last 30 days", "this_month", "This month", "last_month", "Last month", "this_year", "This year", "custom", "Custom");
+    private static final List<Opt> PRESETS = Opt.pairs("today", I18n.t("Today"), "yesterday", I18n.t("Yesterday"), "last_7_days", I18n.t("Last 7 days"),
+            "last_30_days", I18n.t("Last 30 days"), "this_month", I18n.t("This month"), "last_month", I18n.t("Last month"), "this_year", I18n.t("This year"), "custom", I18n.t("Custom"));
 
     private final Page def;
     private String preset;
@@ -100,7 +101,7 @@ public final class ReportScreen extends Screen implements Action.Ctx {
 
         LinearLayout controls = Ui.card(ctx);
         if (def.dateRange) {
-            presetButton = Ui.button(ctx, "", Ui.Style.OUTLINE, v -> Dialogs.pick(ctx, "Period", PRESETS, false, o -> {
+            presetButton = Ui.button(ctx, "", Ui.Style.OUTLINE, v -> Dialogs.pick(ctx, I18n.t("Period"), PRESETS, false, o -> {
                 preset = String.valueOf(o.value);
                 if (!"custom".equals(preset)) {
                     LocalDate[] r = range(preset);
@@ -162,7 +163,7 @@ public final class ReportScreen extends Screen implements Action.Ctx {
             });
             controls.addView(search, Ui.margins(Ui.match(), ctx, 0, 8, 0, 0));
         }
-        Button apply = Ui.button(ctx, "Apply", Ui.Style.PRIMARY, v -> {
+        Button apply = Ui.button(ctx, I18n.t("Apply"), Ui.Style.PRIMARY, v -> {
             if (filterForm != null) filters = filterForm.read();
             page = 1;
             reload();
@@ -190,9 +191,9 @@ public final class ReportScreen extends Screen implements Action.Ctx {
     }
 
     private void paintDates() {
-        presetButton.setText("Period: " + Format.optionLabel(PRESETS, preset));
-        startButton.setText("From " + Format.date(start.toString()));
-        endButton.setText("To " + Format.date(end.toString()));
+        presetButton.setText(I18n.t("Period") + ": " + Format.optionLabel(PRESETS, preset));
+        startButton.setText(I18n.t("From") + " " + Format.date(start.toString()));
+        endButton.setText(I18n.t("To") + " " + Format.date(end.toString()));
     }
 
     private void pickDate(final boolean isStart) {
@@ -255,7 +256,7 @@ public final class ReportScreen extends Screen implements Action.Ctx {
         drawSummary(res.optJSONObject("summary"));
         drawChart(res);
         list.removeAllViews();
-        if (rows.isEmpty()) list.addView(Ui.empty(ctx, "No data for this period"));
+        if (rows.isEmpty()) list.addView(Ui.empty(ctx, I18n.t("No data for this period")));
         for (int i = 0; i < rows.size(); i++) {
             final JSONObject row = rows.get(i);
             LinearLayout card = Ui.rowCard(ctx, def.columns, row, null);
@@ -265,7 +266,7 @@ public final class ReportScreen extends Screen implements Action.Ctx {
         JSONObject totals = res.optJSONObject("totals");
         if (totals != null && !rows.isEmpty()) {
             LinearLayout card = Ui.card(ctx);
-            card.addView(Ui.text(ctx, "Total", 16, Theme.text, true));
+            card.addView(Ui.text(ctx, I18n.t("Total"), 16, Theme.text, true));
             for (Field c : def.columns) {
                 if (c.key != null && totals.has(c.key)) card.addView(Ui.pair(ctx, c.label, Format.cell(c, totals)), Ui.match());
             }
@@ -277,17 +278,17 @@ public final class ReportScreen extends Screen implements Action.Ctx {
         if (def.paginated && m != null && m.optInt("total_pages", 1) > 1) {
             final int pg = m.optInt("page", 1);
             final int pages = m.optInt("total_pages", 1);
-            Button prev = Ui.button(ctx, "‹ Prev", Ui.Style.TEXT, v -> {
+            Button prev = Ui.button(ctx, "‹ " + I18n.t("Previous"), Ui.Style.TEXT, v -> {
                 page = pg - 1;
                 reload();
             });
             prev.setEnabled(pg > 1);
-            Button next = Ui.button(ctx, "Next ›", Ui.Style.TEXT, v -> {
+            Button next = Ui.button(ctx, I18n.t("Next") + " ›", Ui.Style.TEXT, v -> {
                 page = pg + 1;
                 reload();
             });
             next.setEnabled(pg < pages);
-            TextView info = Ui.muted(ctx, "Page " + pg + " of " + pages + " · " + Format.number(m.opt("total")) + " rows");
+            TextView info = Ui.muted(ctx, I18n.t("Page {page} of {pages} · {total} rows", "page", pg, "pages", pages, "total", Format.number(m.opt("total"))));
             info.setGravity(Gravity.CENTER);
             pager.addView(prev, Ui.wrap());
             pager.addView(info, Ui.weight(1));
@@ -341,7 +342,7 @@ public final class ReportScreen extends Screen implements Action.Ctx {
         final List<String> labels = new ArrayList<>();
         final List<Runnable> runs = new ArrayList<>();
         if (def.detail != null) {
-            labels.add("Details");
+            labels.add(I18n.t("Details"));
             runs.add(() -> detail(row));
         }
         for (final Action a : def.rowActions) {
@@ -366,16 +367,16 @@ public final class ReportScreen extends Screen implements Action.Ctx {
     @Override
     public List<ToolItem> menu() {
         List<ToolItem> m = new ArrayList<>();
-        if (def.export) m.add(new ToolItem("Download", def.toolbar.isEmpty(), this::export));
+        if (def.export) m.add(new ToolItem(I18n.t("Download"), def.toolbar.isEmpty(), this::export));
         for (final Action a : def.toolbar) m.add(new ToolItem(a.label, false, () -> a.run(act, null, this)));
-        m.add(new ToolItem("Refresh", false, this::reload));
+        m.add(new ToolItem(I18n.t("Refresh"), false, this::reload));
         return m;
     }
 
     private void export() {
         final Map<String, Object> qy = query(false);
         qy.put("format", "xlsx");
-        act.toast("Preparing report…");
+        act.toast(I18n.t("Preparing report…"));
         act.run(() -> {
             act.saveFile(act.api().download(def.endpoint + "/export", qy), def.id + ".xlsx");
             return Boolean.TRUE;

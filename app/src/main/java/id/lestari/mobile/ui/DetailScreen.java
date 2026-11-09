@@ -8,6 +8,7 @@ import android.widget.TextView;
 import id.lestari.mobile.core.Field;
 import id.lestari.mobile.core.Format;
 import id.lestari.mobile.core.Host;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 
 import org.json.JSONObject;
@@ -46,7 +47,7 @@ public final class DetailScreen extends Screen {
             box.removeAllViews();
             if (tableKey != null) {
                 List<JSONObject> rows = Json.objects(Json.get(data, tableKey));
-                if (rows.isEmpty()) box.addView(Ui.empty(ctx, "No receipts"));
+                if (rows.isEmpty()) box.addView(Ui.empty(ctx, I18n.t("No receipts")));
                 for (JSONObject r : rows) box.addView(Ui.rowCard(ctx, tableColumns, r, null), Ui.cardParams(ctx));
             } else {
                 box.addView(build(ctx, fields, data == null ? new JSONObject() : data), Ui.cardParams(ctx));
@@ -72,7 +73,7 @@ public final class DetailScreen extends Screen {
             if ("items".equals(f.type)) {
                 card.addView(Ui.text(c, f.label, 14, Theme.text, true), Ui.margins(Ui.match(), c, 0, 10, 0, 4));
                 List<JSONObject> rows = Json.objects(Json.get(row, f.key));
-                if (rows.isEmpty()) card.addView(Ui.muted(c, "No rows"));
+                if (rows.isEmpty()) card.addView(Ui.muted(c, I18n.t("No rows")));
                 for (JSONObject r : rows) {
                     LinearLayout sub = Ui.vbox(c);
                     sub.setBackground(Ui.rounded(Theme.background, Theme.border, 8, c));

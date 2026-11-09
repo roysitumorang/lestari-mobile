@@ -21,7 +21,15 @@ public final class Defs {
         return SettingsDefs.CHANGE_PASSWORD;
     }
 
+    /** Forget the definitions so the next {@link #get()} rebuilds them in the current language. */
+    public static synchronized void reset() {
+        registry = null;
+    }
+
     static Registry build() {
+        Common.init();
+        TransactionDefs.init();
+        SettingsDefs.init();
         Registry r = new Registry();
         DashboardDefs.register(r);
         DatabaseDefs.register(r);

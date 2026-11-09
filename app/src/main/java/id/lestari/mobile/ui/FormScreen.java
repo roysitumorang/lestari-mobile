@@ -7,6 +7,7 @@ import android.widget.TextView;
 
 import id.lestari.mobile.core.ApiException;
 import id.lestari.mobile.core.Host;
+import id.lestari.mobile.core.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,7 @@ public final class FormScreen extends Screen {
             box.addView(intro, Ui.match());
         }
         if (spec.linkUrl != null && !spec.linkUrl.isEmpty()) {
-            box.addView(Ui.button(ctx, spec.linkLabel == null ? "Open link" : spec.linkLabel, Ui.Style.OUTLINE, v -> act.openUrl(spec.linkUrl)), Ui.wrap());
+            box.addView(Ui.button(ctx, spec.linkLabel == null ? I18n.t("Open link") : spec.linkLabel, Ui.Style.OUTLINE, v -> act.openUrl(spec.linkUrl)), Ui.wrap());
         }
         form = new FormView(act, spec.fields, spec.values, false);
         box.addView(form.view(), Ui.match());

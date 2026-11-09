@@ -7,6 +7,14 @@ import android.os.Handler;
 import android.os.Looper;
 
 import id.lestari.mobile.core.Api;
+import id.lestari.mobile.core.I18n;
+import id.lestari.mobile.defs.Defs;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
+import java.util.Map;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +44,35 @@ public final class LestariApp extends Application {
                 else prefs.edit().putString(key, value).apply();
             }
         });
+        String lang = api.store().get(Api.K_LANG);
+        if (!I18n.supported(lang)) {
+            String sys = Locale.getDefault().getLanguage(); // Indonesian is "in" on older JDKs, "id" on newer ones
+            lang = "in".equals(sys) || "id".equals(sys) ? I18n.ID : I18n.EN;
+        }
+        I18n.set(lang, I18n.ID.equals(lang) ? dictionary() : null);
+    }
+
+    /**
+     * Switch the language of the whole app: persists the choice, loads the dictionary and drops the page
+     * definitions so they are rebuilt with translated labels. Returns false when nothing changed.
+     */
+    public boolean setLanguage(String lang) {
+        if (!I18n.supported(lang) || lang.equals(I18n.lang())) return false;
+        api.store().set(Api.K_LANG, lang);
+        I18n.set(lang, I18n.ID.equals(lang) ? dictionary() : null);
+        Defs.reset();
+        return true;
+    }
+
+    private Map<String, String> dictionary() {
+        try (InputStream in = getAssets().open("i18n/id.json")) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[16384];
+            for (int n; (n = in.read(buf)) > 0; ) out.write(buf, 0, n);
+            return I18n.parse(out.toString(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static LestariApp get() {

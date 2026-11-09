@@ -42,7 +42,7 @@ public final class Registry {
         public final List<Object> items;
 
         public Group(String label, List<Object> items) {
-            this.label = label;
+            this.label = I18n.t(label);
             this.items = items;
         }
     }

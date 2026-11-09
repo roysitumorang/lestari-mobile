@@ -71,7 +71,7 @@ public final class Action {
 
     public Action(String id, String label) {
         this.id = id;
-        this.label = label;
+        this.label = I18n.t(label);
     }
 
     // ---- builders ----
@@ -98,9 +98,9 @@ public final class Action {
 
     public Action form(Field... fields) { form = new ArrayList<>(Arrays.asList(fields)); return this; }
     public Action upload() { upload = true; return this; }
-    public Action confirm(String text) { confirm = text; return this; }
+    public Action confirm(String text) { confirm = I18n.t(text); return this; }
     public Action typeToConfirm(String word) { typeToConfirm = word; return this; }
-    public Action success(String s) { success = s; return this; }
+    public Action success(String s) { success = I18n.t(s); return this; }
     public Action danger() { danger = true; return this; }
     public Action noReload() { reload = false; return this; }
     public Action useFilters() { useFilters = true; return this; }
@@ -108,7 +108,7 @@ public final class Action {
     public Action when(When w) { when = w; return this; }
     public Action after(After a) { after = a; return this; }
     public Action values(Values v) { values = v; return this; }
-    public Action title(String t) { title = t; return this; }
+    public Action title(String t) { title = I18n.t(t); return this; }
 
     public boolean appliesTo(JSONObject row) {
         return when == null || when.test(row == null ? new JSONObject() : row);
@@ -199,7 +199,7 @@ public final class Action {
     }
 
     private void done(Host host, Ctx ctx) {
-        if (download == null) host.toast(success != null ? success : "Done");
+        if (download == null) host.toast(success != null ? success : I18n.t("Done"));
         if (reload && ctx != null) ctx.reload();
     }
 

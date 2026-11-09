@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Opt;
 
 import java.util.ArrayList;
@@ -43,7 +44,7 @@ public final class Dialogs {
     /** Pick one option; a search box appears for long lists. {@code allowNone} adds "— None —". */
     public static void pick(Context c, String title, List<Opt> options, boolean allowNone, OnPick onPick) {
         final List<Opt> all = new ArrayList<>();
-        if (allowNone) all.add(new Opt(null, "— None —"));
+        if (allowNone) all.add(new Opt(null, I18n.t("— None —")));
         all.addAll(options);
         final List<Opt> shown = new ArrayList<>(all);
         LinearLayout box = Ui.vbox(c);
@@ -52,7 +53,7 @@ public final class Dialogs {
         list.setAdapter(adapter);
         if (all.size() > 10) {
             EditText search = new EditText(c);
-            search.setHint("Search");
+            search.setHint(I18n.t("Search"));
             search.setSingleLine(true);
             search.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -73,7 +74,7 @@ public final class Dialogs {
             box.addView(search, Ui.margins(Ui.match(), c, 20, 8, 20, 0));
         }
         box.addView(list, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, Ui.dp(c, Math.min(420, 52 * Math.max(all.size(), 1)))));
-        final AlertDialog d = builder(c).setTitle(title).setView(box).setNegativeButton("Cancel", null).create();
+        final AlertDialog d = builder(c).setTitle(title).setView(box).setNegativeButton(I18n.t("Cancel"), null).create();
         list.setOnItemClickListener((parent, view, pos, id) -> {
             d.dismiss();
             onPick.pick(shown.get(pos));
@@ -87,8 +88,8 @@ public final class Dialogs {
         for (int i = 0; i < options.size(); i++) checked[i] = selected.contains(String.valueOf(options.get(i).value));
         builder(c).setTitle(title)
                 .setMultiChoiceItems(labels, checked, (dialog, which, isChecked) -> checked[which] = isChecked)
-                .setNegativeButton("Cancel", null)
-                .setNeutralButton("Clear", (dialog, w) -> onDone.done(new ArrayList<>()))
+                .setNegativeButton(I18n.t("Cancel"), null)
+                .setNeutralButton(I18n.t("Clear"), (dialog, w) -> onDone.done(new ArrayList<>()))
                 .setPositiveButton("OK", (dialog, w) -> {
                     List<Object> out = new ArrayList<>();
                     for (int i = 0; i < checked.length; i++) if (checked[i]) out.add(options.get(i).value);
@@ -99,15 +100,15 @@ public final class Dialogs {
 
     /** Confirmation; with {@code typeToConfirm} the OK button stays disabled until the word is typed. */
     public static void confirm(Context c, String title, String message, String okText, boolean danger, String typeToConfirm, Runnable onOk) {
-        AlertDialog.Builder b = builder(c).setTitle(title == null ? "Confirm" : title).setNegativeButton("Cancel", null)
-                .setPositiveButton(okText == null ? "Yes" : okText, (d, w) -> onOk.run());
+        AlertDialog.Builder b = builder(c).setTitle(title == null ? I18n.t("Confirm") : title).setNegativeButton(I18n.t("Cancel"), null)
+                .setPositiveButton(okText == null ? I18n.t("Yes") : okText, (d, w) -> onOk.run());
         EditText input = null;
         if (typeToConfirm != null) {
             LinearLayout box = Ui.vbox(c);
             int p = Ui.dp(c, 22);
             box.setPadding(p, Ui.dp(c, 8), p, 0);
             box.addView(Ui.body(c, message));
-            TextView hint = Ui.muted(c, "Type " + typeToConfirm + " to continue");
+            TextView hint = Ui.muted(c, I18n.t("Type {word} to continue", "word", typeToConfirm));
             hint.setPadding(0, Ui.dp(c, 12), 0, 0);
             box.addView(hint);
             input = new EditText(c);
@@ -143,11 +144,11 @@ public final class Dialogs {
     /** A list of choices (row actions). */
     public static void sheet(Context c, String title, List<String> items, OnIndex onChoose) {
         builder(c).setTitle(title).setItems(items.toArray(new String[0]), (d, which) -> onChoose.choose(which))
-                .setNegativeButton("Close", null).show();
+                .setNegativeButton(I18n.t("Close"), null).show();
     }
 
     public static void info(Context c, String title, View body) {
-        builder(c).setTitle(title).setView(body).setPositiveButton("Close", null).show();
+        builder(c).setTitle(title).setView(body).setPositiveButton(I18n.t("Close"), null).show();
     }
 
     public static AlertDialog.Builder alert(Context c) {

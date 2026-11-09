@@ -105,14 +105,20 @@ public final class Format {
             case "datetime":
                 return datetime(v);
             case "boolean":
-                return Json.truthy(v) ? "Yes" : "No";
+                return I18n.t(Json.truthy(v) ? "Yes" : "No");
             case "badge":
-                return blank(v) ? "-" : humanize(String.valueOf(v));
+                return blank(v) ? "-" : badge(String.valueOf(v));
             case "list":
                 return list(v);
             default:
                 return text(v);
         }
+    }
+
+    /** A status/type value: its translation when the dictionary has one, otherwise humanized ("in_transit" → "In transit"). */
+    public static String badge(String raw) {
+        String tr = I18n.t(raw);
+        return tr.equals(raw) ? humanize(raw) : tr;
     }
 
     private static String list(Object v) {

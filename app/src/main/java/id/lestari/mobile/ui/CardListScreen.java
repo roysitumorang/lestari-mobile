@@ -7,6 +7,7 @@ import id.lestari.mobile.core.ApiException;
 import id.lestari.mobile.core.Field;
 import id.lestari.mobile.core.Format;
 import id.lestari.mobile.core.Host;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Opt;
 import id.lestari.mobile.core.Page;
@@ -59,7 +60,7 @@ public final class CardListScreen extends Screen {
         list.addView(Ui.spinner(ctx));
         load(() -> Json.objects(act.api().get(endpoint).opt("data")), rows -> {
             list.removeAllViews();
-            if (rows.isEmpty()) list.addView(Ui.empty(ctx, "Nothing available yet"));
+            if (rows.isEmpty()) list.addView(Ui.empty(ctx, I18n.t("Nothing available yet")));
             for (JSONObject r : rows) {
                 LinearLayout card = Ui.card(ctx);
                 LinearLayout top = Ui.hbox(ctx);
@@ -88,22 +89,22 @@ public final class CardListScreen extends Screen {
             final String code = Json.str(i, "code");
             LinearLayout buttons = Ui.hbox(s.ctx);
             if ("inactive".equals(Json.str(i, "status"))) {
-                buttons.addView(Ui.button(s.ctx, "Connect", Ui.Style.PRIMARY, v -> Dialogs.confirm(s.ctx, "Connect",
-                        "I have read and accept the terms of service of this integration.", "Accept & connect", false, null,
+                buttons.addView(Ui.button(s.ctx, I18n.t("Connect"), Ui.Style.PRIMARY, v -> Dialogs.confirm(s.ctx, I18n.t("Connect"),
+                        I18n.t("I have read and accept the terms of service of this integration."), I18n.t("Accept & connect"), false, null,
                         () -> act.run(() -> act.api().post("/integrations/" + code + "/activate", Json.obj("accept_terms", true)).optJSONObject("data"), r -> {
                             if (r != null && !Json.str(r, "redirect_url").isEmpty()) act.openUrl(Json.str(r, "redirect_url"));
-                            act.toast("Integration requested");
+                            act.toast(I18n.t("Integration requested"));
                             s.reload();
                         }))), Ui.wrap());
             } else {
-                buttons.addView(Ui.button(s.ctx, "Disconnect", Ui.Style.OUTLINE, v -> Dialogs.confirm(s.ctx, "Disconnect", "Disconnect this integration?",
-                        "Disconnect", true, null, () -> act.run(() -> act.api().post("/integrations/" + code + "/deactivate", null), r -> {
-                            act.toast("Disconnected");
+                buttons.addView(Ui.button(s.ctx, I18n.t("Disconnect"), Ui.Style.OUTLINE, v -> Dialogs.confirm(s.ctx, I18n.t("Disconnect"), I18n.t("Disconnect this integration?"),
+                        I18n.t("Disconnect"), true, null, () -> act.run(() -> act.api().post("/integrations/" + code + "/deactivate", null), r -> {
+                            act.toast(I18n.t("Disconnected"));
                             s.reload();
                         }))), Ui.wrap());
             }
             final String terms = Json.str(i, "terms_url");
-            if (!terms.isEmpty()) buttons.addView(Ui.button(s.ctx, "Terms", Ui.Style.TEXT, v -> act.openUrl(terms)), Ui.wrap());
+            if (!terms.isEmpty()) buttons.addView(Ui.button(s.ctx, I18n.t("Terms"), Ui.Style.TEXT, v -> act.openUrl(terms)), Ui.wrap());
             card.addView(buttons, Ui.margins(Ui.match(), s.ctx, 0, 8, 0, 0));
         });
     }
@@ -115,30 +116,30 @@ public final class CardListScreen extends Screen {
             String interest = Json.str(p, "interest_info");
             if (!interest.isEmpty()) card.addView(Ui.muted(s.ctx, interest));
             LinearLayout buttons = Ui.hbox(s.ctx);
-            buttons.addView(Ui.button(s.ctx, "Apply", Ui.Style.PRIMARY, v -> apply(act, p)), Ui.wrap());
+            buttons.addView(Ui.button(s.ctx, I18n.t("Apply"), Ui.Style.PRIMARY, v -> apply(act, p)), Ui.wrap());
             final String info = Json.str(p, "info_url");
-            if (!info.isEmpty()) buttons.addView(Ui.button(s.ctx, "Details", Ui.Style.TEXT, v -> act.openUrl(info)), Ui.wrap());
+            if (!info.isEmpty()) buttons.addView(Ui.button(s.ctx, I18n.t("Details"), Ui.Style.TEXT, v -> act.openUrl(info)), Ui.wrap());
             card.addView(buttons, Ui.margins(Ui.match(), s.ctx, 0, 8, 0, 0));
         });
     }
 
     private static void apply(final MainActivity act, final JSONObject p) {
         List<Opt> tenors = new ArrayList<>();
-        for (Object t : Json.values(p.opt("tenors_months"))) tenors.add(new Opt(t, FormView.plain(t) + " months"));
+        for (Object t : Json.values(p.opt("tenors_months"))) tenors.add(new Opt(t, I18n.t("{n} months", "n", FormView.plain(t))));
         final JSONObject[] res = {null};
         Host.FormSpec spec = new Host.FormSpec();
-        spec.title = "Apply · " + Json.str(p, "name");
-        spec.submitText = "Submit application";
-        Field amount = Field.money("amount", "Amount").req();
+        spec.title = I18n.t("Apply") + " · " + Json.str(p, "name");
+        spec.submitText = I18n.t("Submit application");
+        Field amount = Field.money("amount", I18n.t("Amount")).req();
         if (p.has("min_amount")) amount.min(Json.num(p.opt("min_amount")));
         if (p.has("max_amount")) amount.max(Json.num(p.opt("max_amount")));
-        spec.fields = Arrays.asList(amount, Field.select("tenor_months", "Tenor", tenors).req(),
-                Field.textarea("purpose", "What is the loan for?").req(),
-                Field.sw("consent", "I agree to share my store and sales data with this partner").req().w(12));
+        spec.fields = Arrays.asList(amount, Field.select("tenor_months", I18n.t("Tenor"), tenors).req(),
+                Field.textarea("purpose", I18n.t("What is the loan for?")).req(),
+                Field.sw("consent", I18n.t("I agree to share my store and sales data with this partner")).req().w(12));
         spec.onSubmit = v -> {
             if (!v.optBoolean("consent")) {
-                ApiException e = new ApiException(422, "validation_failed", "Please give consent to continue");
-                e.fields.put("consent", "Required");
+                ApiException e = new ApiException(422, "validation_failed", I18n.t("Please give consent to continue"));
+                e.fields.put("consent", I18n.t("Required"));
                 throw e;
             }
             JSONObject body = Json.copy(v);
@@ -148,7 +149,7 @@ public final class CardListScreen extends Screen {
         spec.onDone = () -> {
             JSONObject d = res[0] == null ? null : res[0].optJSONObject("data");
             if (d != null && !Json.str(d, "redirect_url").isEmpty()) act.openUrl(Json.str(d, "redirect_url"));
-            act.toast("Application submitted");
+            act.toast(I18n.t("Application submitted"));
         };
         act.form(spec);
     }

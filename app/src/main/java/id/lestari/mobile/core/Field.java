@@ -48,7 +48,7 @@ public final class Field {
 
     public Field(String key, String label, String type) {
         this.key = key;
-        this.label = label;
+        this.label = I18n.t(label);
         this.type = type;
     }
 
@@ -124,8 +124,8 @@ public final class Field {
     public Field def(Object v) { def = v; return this; }
     public Field min(double v) { min = v; return this; }
     public Field max(double v) { max = v; return this; }
-    public Field help(String s) { help = s; return this; }
-    public Field ph(String s) { placeholder = s; return this; }
+    public Field help(String s) { help = I18n.t(s); return this; }
+    public Field ph(String s) { placeholder = I18n.t(s); return this; }
     public Field accept(String s) { accept = s; return this; }
     public Field fmt(String s) { format = s; return this; }
     public Field w(int col) { this.col = col; return this; }

@@ -10,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import id.lestari.mobile.core.Api;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Opt;
 import id.lestari.mobile.core.Page;
@@ -57,16 +58,16 @@ public final class MenuScreen extends Screen {
         head.addView(storeName);
         head.addView(userLine, Ui.margins(Ui.match(), ctx, 0, 2, 0, 8));
         LinearLayout buttons = Ui.hbox(ctx);
-        branchButton = Ui.button(ctx, "Branch", Ui.Style.OUTLINE, v -> chooseBranch());
+        branchButton = Ui.button(ctx, I18n.t("Branch"), Ui.Style.OUTLINE, v -> chooseBranch());
         branchButton.setVisibility(View.GONE);
-        bellButton = Ui.button(ctx, "Notifications", Ui.Style.OUTLINE, v -> act.open("notifications"));
+        bellButton = Ui.button(ctx, I18n.t("Notifications"), Ui.Style.OUTLINE, v -> act.open("notifications"));
         buttons.addView(bellButton, Ui.margins(Ui.wrap(), ctx, 0, 0, 8, 0));
         buttons.addView(branchButton, Ui.wrap());
         head.addView(Ui.hscroll(ctx, buttons));
         box.addView(head, Ui.margins(Ui.match(), ctx, 12, 12, 12, 6));
 
         EditText search = new EditText(ctx);
-        search.setHint("Search menu");
+        search.setHint(I18n.t("Search menu"));
         search.setSingleLine(true);
         search.setTextColor(Theme.text);
         search.setHintTextColor(Theme.muted);
@@ -99,9 +100,10 @@ public final class MenuScreen extends Screen {
     @Override
     public List<ToolItem> menu() {
         List<ToolItem> m = new ArrayList<>();
-        m.add(new ToolItem("Profile", false, () -> act.open("profile")));
-        m.add(new ToolItem("Change password", false, () -> Defs.changePassword().run(act, null, null)));
-        m.add(new ToolItem("Sign out", false, this::signOut));
+        m.add(new ToolItem(I18n.t("Profile"), false, () -> act.open("profile")));
+        m.add(new ToolItem(I18n.t("Change password"), false, () -> Defs.changePassword().run(act, null, null)));
+        m.add(new ToolItem(I18n.t("Language") + " · " + ("id".equals(I18n.lang()) ? "ID" : "EN"), false, this::chooseLanguage));
+        m.add(new ToolItem(I18n.t("Sign out"), false, this::signOut));
         return m;
     }
 
@@ -121,7 +123,7 @@ public final class MenuScreen extends Screen {
         String line = name + " · " + Json.str(me, "role") + (branch != null ? " · " + Json.str(branch, "name") : "");
         userLine.setText(line);
         int n = act.unread();
-        bellButton.setText(n > 0 ? "Notifications (" + (n > 99 ? "99+" : n) + ")" : "Notifications");
+        bellButton.setText(n > 0 ? I18n.t("Notifications") + " (" + (n > 99 ? "99+" : n) + ")" : I18n.t("Notifications"));
         drawMenu();
     }
 
@@ -140,7 +142,7 @@ public final class MenuScreen extends Screen {
             String cur = act.api().store().get(Api.K_BRANCH);
             JSONObject b = act.user().optJSONObject("branch");
             if (cur == null && b != null) cur = Json.str(b, "id");
-            String label = "Branch";
+            String label = I18n.t("Branch");
             for (JSONObject r : rows) if (Json.str(r, "id").equals(cur)) label = Json.str(r, "name");
             branchButton.setText(label + " ▾");
             branchButton.setVisibility(View.VISIBLE);
@@ -150,11 +152,16 @@ public final class MenuScreen extends Screen {
     private void chooseBranch() {
         List<Opt> opts = new ArrayList<>();
         for (JSONObject r : branches) opts.add(new Opt(Json.str(r, "id"), Json.str(r, "name") + (r.optBoolean("is_head_office") ? " (head office)" : "")));
-        Dialogs.pick(ctx, "Switch branch", opts, false, o -> act.switchBranch(String.valueOf(o.value)));
+        Dialogs.pick(ctx, I18n.t("Switch branch"), opts, false, o -> act.switchBranch(String.valueOf(o.value)));
+    }
+
+    private void chooseLanguage() {
+        Dialogs.pick(ctx, I18n.t("Language"), Opt.pairs(I18n.EN, "English", I18n.ID, "Bahasa Indonesia"), false,
+                o -> act.changeLanguage(String.valueOf(o.value)));
     }
 
     private void signOut() {
-        Dialogs.confirm(ctx, "Sign out", "Sign out of this device?", "Sign out", false, null, () -> load(() -> {
+        Dialogs.confirm(ctx, I18n.t("Sign out"), I18n.t("Sign out of this device?"), I18n.t("Sign out"), false, null, () -> load(() -> {
             try {
                 act.api().post("/auth/logout", null);
             } catch (Exception ignored) {
