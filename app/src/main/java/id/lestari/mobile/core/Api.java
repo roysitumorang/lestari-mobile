@@ -27,7 +27,10 @@ import java.util.regex.Pattern;
  * Blocking HTTP client for the Lestari backend (call it from a background thread).
  * <ul>
  *   <li>Sends {@code Authorization: Bearer <token>} and {@code X-Branch-Id} when a branch is selected.</li>
- *   <li>Expects the JSON envelope {@code { data, meta?, summary?, totals?, chart? }} or {@code { error }}.</li>
+ *   <li>Expects the response envelope {@code { request_id, request_url, status_code, status, message, timestamp,
+ *       latency, data, app }}: lists carry {@code { links, info, rows, summary?, totals?, chart? }} in {@code data},
+ *       errors carry {@code { code, fields? }}. {@link #unwrap(JSONObject)} turns it into what the screens use:
+ *       {@code { data, meta?, summary?, totals?, chart?, message, request_id }}.</li>
  *   <li>On 401 it refreshes the session once, then reports sign-out through {@link Listener}.</li>
  *   <li>Passwords are sent base64-encoded: see {@link #encodePassword(String)}.</li>
  * </ul>
@@ -125,13 +128,38 @@ public final class Api {
     public JSONObject request(String method, String path, Map<String, Object> query, Object body) throws ApiException {
         byte[] payload = body == null ? null : body.toString().getBytes(StandardCharsets.UTF_8);
         Response r = send(method, path, query, payload, payload == null ? null : "application/json", true);
-        return r.json();
+        return unwrap(r.json());
+    }
+
+    /**
+     * Response envelope → {@code { data, meta?, summary?, totals?, chart?, message, request_id }}: a list's
+     * {@code data.rows} becomes {@code data} and {@code data.info} becomes
+     * {@code meta { page, per_page, total, total_pages }}.
+     */
+    public static JSONObject unwrap(JSONObject payload) {
+        JSONObject out = new JSONObject();
+        if (payload == null) return out;
+        Object data = payload.opt("data");
+        Json.put(out, "message", Json.str(payload, "message"));
+        Json.put(out, "request_id", Json.str(payload, "request_id"));
+        JSONObject d = data instanceof JSONObject ? (JSONObject) data : null;
+        JSONObject info = d == null ? null : d.optJSONObject("info");
+        if (info != null && d.has("rows") && d.has("links")) {
+            Object rows = d.opt("rows");
+            Json.put(out, "data", rows == null || rows == JSONObject.NULL ? new JSONArray() : rows);
+            Json.put(out, "meta", Json.obj("page", info.optInt("page", 1), "per_page", info.optInt("limit"),
+                    "total", info.optInt("total"), "total_pages", info.optInt("pages", 1)));
+            for (String k : new String[]{"summary", "totals", "chart"}) if (d.has(k) && !d.isNull(k)) Json.put(out, k, d.opt(k));
+        } else if (data != null) {
+            Json.put(out, "data", data);
+        }
+        return out;
     }
 
     /** multipart/form-data upload (files and plain fields). */
     public JSONObject upload(String path, Multipart form) throws ApiException {
         Response r = send("POST", path, null, form.bytes(), form.contentType(), true);
-        return r.json();
+        return unwrap(r.json());
     }
 
     /** A file response (PDF, XLSX, PNG …). */

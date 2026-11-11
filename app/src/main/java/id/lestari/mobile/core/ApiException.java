@@ -22,9 +22,10 @@ public final class ApiException extends Exception {
     }
 
     static ApiException from(int status, JSONObject payload) {
-        JSONObject err = payload == null ? null : payload.optJSONObject("error");
-        String code = err != null ? err.optString("code", "http_" + status) : "http_" + status;
-        String msg = err != null ? Json.str(err, "message", "") : "";
+        // envelope: the message is top-level, the code and field messages are in data
+        JSONObject err = payload == null ? null : payload.optJSONObject("data");
+        String code = err != null ? Json.str(err, "code", "http_" + status) : "http_" + status;
+        String msg = payload != null ? Json.str(payload, "message", "") : "";
         if (msg.isEmpty()) msg = I18n.t("Request failed ({status})", "status", status);
         ApiException e = new ApiException(status, code, msg);
         JSONObject f = err == null ? null : err.optJSONObject("fields");
