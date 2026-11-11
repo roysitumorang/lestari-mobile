@@ -205,8 +205,8 @@ public final class Api {
                 if (r.status != 200) return false;
                 JSONObject d = r.json().optJSONObject("data");
                 if (d == null) return false;
-                store.set(K_TOKEN, d.optString("access_token"));
-                store.set(K_REFRESH, d.optString("refresh_token"));
+                store.set(K_TOKEN, Json.str(d, "access_token"));
+                store.set(K_REFRESH, Json.str(d, "refresh_token"));
                 return true;
             } catch (IOException | ApiException e) {
                 return false;

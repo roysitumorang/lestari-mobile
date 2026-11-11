@@ -128,7 +128,7 @@ public final class Format {
             if (sb.length() > 0) sb.append(", ");
             if (x instanceof JSONObject) {
                 JSONObject o = (JSONObject) x;
-                sb.append(o.optString("name", o.optString("label", o.optString("id"))));
+                sb.append(Json.str(o, "name", Json.str(o, "label", Json.str(o, "id"))));
             } else sb.append(x);
         }
         return sb.length() == 0 ? "-" : sb.toString();

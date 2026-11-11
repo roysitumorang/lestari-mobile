@@ -7,6 +7,7 @@ import static id.lestari.mobile.defs.Common.list;
 
 import id.lestari.mobile.core.Action;
 import id.lestari.mobile.core.Field;
+import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Opt;
 import id.lestari.mobile.core.Page;
 import id.lestari.mobile.core.Registry;
@@ -87,11 +88,11 @@ final class BranchDefs {
                 .filters(confirmFilters).columns(transferCols)
                 .rowActions(
                         Action.call("accept", "Accept", "POST", "/stock-transfers/{id}/accept").success("Transfer accepted")
-                                .when(row -> "pending".equals(row.optString("status")) && "in".equals(row.optString("direction")))
+                                .when(row -> "pending".equals(Json.str(row, "status")) && "in".equals(Json.str(row, "direction")))
                                 .form(Field.items("items", "Received quantities (leave empty to accept all)", Field.lookup("product_id", "Product", PRODUCTS),
                                         Field.number("received_quantity", "Received")), Field.textarea("note", "Note")),
                         Action.call("reject", "Reject", "POST", "/stock-transfers/{id}/reject").success("Transfer rejected")
-                                .when(row -> "pending".equals(row.optString("status")) && "in".equals(row.optString("direction")))
+                                .when(row -> "pending".equals(Json.str(row, "status")) && "in".equals(Json.str(row, "direction")))
                                 .form(Field.textarea("reason", "Reason").req())));
 
         r.add(new Page(Page.Kind.CRUD, "branches", "Branches").singular("Branch").endpoint("/branches")
@@ -108,6 +109,6 @@ final class BranchDefs {
                                 .when(row -> !row.optBoolean("is_head_office"))
                                 .form(Field.multiLookup("category_ids", "Categories (empty = all)", CATEGORIES).w(12),
                                         Field.sw("include_stock", "Copy stock quantities too")),
-                        Action.custom("switch", "Open this branch", (host, row, ctx) -> host.switchBranch(row.optString("id")))));
+                        Action.custom("switch", "Open this branch", (host, row, ctx) -> host.switchBranch(Json.str(row, "id")))));
     }
 }

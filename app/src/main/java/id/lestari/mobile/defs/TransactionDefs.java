@@ -135,7 +135,7 @@ final class TransactionDefs {
                         Field.items("payments", "Payment history", Field.col("payment_date", "Date", "date"), Field.col("amount", "Amount", "money"),
                                 Field.col("payment_method", "Method"), Field.col("note", "Note")))
                 .rowActions(Action.call("pay", "Record payment", "POST", endpoint + "/{id}/payments").success("Payment recorded")
-                        .when(row -> !"paid".equals(row.optString("status")))
+                        .when(row -> !"paid".equals(Json.str(row, "status")))
                         .values((host, row) -> Json.obj("amount", row.opt("remaining_amount"), "payment_date", LocalDate.now().toString(), "payment_method", "cash"))
                         .form(Field.date("payment_date", "Date").req(), Field.money("amount", "Amount").req().min(1),
                                 Field.select("payment_method", "Method", SALES_PAYMENT_METHODS).req(), Field.textarea("note", "Note"))));

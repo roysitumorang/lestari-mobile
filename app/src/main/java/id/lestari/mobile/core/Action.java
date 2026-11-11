@@ -203,7 +203,7 @@ public final class Action {
         if (reload && ctx != null) ctx.reload();
     }
 
-    private static final Pattern PLACEHOLDER = Pattern.compile("\\{(\\w+)}");
+    private static final Pattern PLACEHOLDER = Pattern.compile("\\{(\\w+)\\}");
 
     /** "/staff/{id}/permissions" + row → "/staff/0190…/permissions" (values URL-encoded). */
     public static String fillPath(String path, JSONObject row) {
@@ -225,7 +225,7 @@ public final class Action {
     /** Open the payment page returned by billing/top-up actions, if any. */
     public static final After OPEN_PAYMENT = (host, res, row) -> {
         JSONObject d = res == null ? null : res.optJSONObject("data");
-        String u = d == null ? "" : d.optString("payment_url", "");
+        String u = d == null ? "" : Json.str(d, "payment_url", "");
         if (!u.isEmpty() && !"null".equals(u)) host.openUrl(u);
     };
 }

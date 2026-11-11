@@ -201,12 +201,12 @@ final class SettingsDefs {
                         Field.lookup("branch_id", "Branch", BRANCHES), Field.textarea("address", "Address"))
                 .rowActions(
                         Action.call("permissions", "Access rights", "PUT", "/staff/{id}/permissions").success("Access rights saved")
-                                .values((host, row) -> host.api().get("/staff/" + row.optString("id") + "/permissions").optJSONObject("data"))
+                                .values((host, row) -> host.api().get("/staff/" + Json.str(row, "id") + "/permissions").optJSONObject("data"))
                                 .form(Field.multi("permissions", "Allowed", permissions).w(12)),
                         Action.call("resend", "Resend invitation email", "POST", "/staff/{id}/resend-invitation").confirm("Send the confirmation email again?")
-                                .success("Invitation sent").when(row -> "invited".equals(row.optString("status"))),
-                        Action.custom("log", "Activity log", (host, row, ctx) -> activityLog(host, "/staff/" + row.optString("id") + "/activity-logs",
-                                I18n.t("Activity log") + " · " + row.optString("name")))));
+                                .success("Invitation sent").when(row -> "invited".equals(Json.str(row, "status"))),
+                        Action.custom("log", "Activity log", (host, row, ctx) -> activityLog(host, "/staff/" + Json.str(row, "id") + "/activity-logs",
+                                I18n.t("Activity log") + " · " + Json.str(row, "name")))));
 
         r.add(new Page(Page.Kind.REPORT, "attendance", "Staff Attendance").endpoint("/staff-attendances").plugin("attendance").preset("this_month")
                 .filters(Field.lookup("staff_id", "Staff", STAFF))
@@ -229,7 +229,7 @@ final class SettingsDefs {
                         Field.textarea("description", "What do you need help with?").req(),
                         Field.text("account_email", "Account").noForm(), Field.datetime("expires_at", "Expires").noForm(), Field.text("status", "Status").noForm())
                 .rowActions(Action.call("revoke", "Revoke access", "POST", "/help-access/{id}/revoke").danger().confirm("Revoke this support access now?")
-                        .success("Access revoked").when(row -> "active".equals(row.optString("status")))));
+                        .success("Access revoked").when(row -> "active".equals(Json.str(row, "status")))));
 
         settings(r, "display", "Back Office Appearance", "/settings/display")
                 .fields(Field.select("color_theme", "Color theme", Opt.pairs("emerald", "Emerald", "ivory", "White ivory", "charcoal", "Black charcoal")).def("emerald"),
@@ -248,7 +248,7 @@ final class SettingsDefs {
                 Field.select("channel", "Send code by", Opt.pairs("whatsapp", "WhatsApp", "sms", "SMS")).def("whatsapp").w(12));
         send.values = Json.obj("phone", Json.str(host.user(), "phone"));
         send.onSubmit = v -> {
-            phone[0] = v.optString("phone");
+            phone[0] = Json.str(v, "phone");
             host.api().post("/account/phone-verification", v);
         };
         send.onDone = () -> {
@@ -257,7 +257,7 @@ final class SettingsDefs {
             confirm.submitText = "Verify";
             confirm.intro = I18n.t("We sent a code to {to}.", "to", phone[0]);
             confirm.fields = list(Field.text("code", "Code").req().w(12));
-            confirm.onSubmit = v -> host.api().post("/account/phone-verification/confirm", Json.obj("phone", phone[0], "code", v.optString("code")));
+            confirm.onSubmit = v -> host.api().post("/account/phone-verification/confirm", Json.obj("phone", phone[0], "code", Json.str(v, "code")));
             confirm.onDone = () -> {
                 host.toast("Phone verified");
                 host.go("profile");
@@ -288,11 +288,11 @@ final class SettingsDefs {
             Host.FormSpec f = new Host.FormSpec();
             f.title = "Two-step verification";
             f.submitText = "Enable";
-            f.intro = I18n.t("Add this key to Google Authenticator or a similar app, then enter the 6-digit code it shows.") + "\n\n" + I18n.t("Key") + ": " + setup.optString("secret");
+            f.intro = I18n.t("Add this key to Google Authenticator or a similar app, then enter the 6-digit code it shows.") + "\n\n" + I18n.t("Key") + ": " + Json.str(setup, "secret");
             f.linkLabel = "Open in authenticator app";
-            f.linkUrl = setup.optString("otpauth_url");
+            f.linkUrl = Json.str(setup, "otpauth_url");
             f.fields = list(Field.text("code", "6-digit code").req().w(12));
-            f.onSubmit = v -> enabled[0] = host.api().post("/account/two-factor/enable", Json.obj("code", v.optString("code"))).optJSONObject("data");
+            f.onSubmit = v -> enabled[0] = host.api().post("/account/two-factor/enable", Json.obj("code", Json.str(v, "code"))).optJSONObject("data");
             f.onDone = () -> {
                 StringBuilder codes = new StringBuilder();
                 for (Object c : Json.values(enabled[0] == null ? null : enabled[0].opt("recovery_codes"))) codes.append(c).append('\n');

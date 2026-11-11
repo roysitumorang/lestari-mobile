@@ -5,6 +5,7 @@ import static id.lestari.mobile.defs.Common.PAYMENT_CHANNELS;
 
 import id.lestari.mobile.core.Action;
 import id.lestari.mobile.core.Field;
+import id.lestari.mobile.core.Json;
 import id.lestari.mobile.core.Opt;
 import id.lestari.mobile.core.Page;
 import id.lestari.mobile.core.Registry;
@@ -37,15 +38,15 @@ final class DashboardDefs {
                         Action.call("voucher", "Redeem voucher", "POST", "/billing/vouchers/redeem").success("Voucher redeemed")
                                 .form(Field.text("code", "Voucher or token code").req().w(12)))
                 .rowActions(
-                        Action.custom("pay", "Pay now", (host, row, ctx) -> host.openUrl(row.optString("payment_url")))
-                                .when(row -> "pending".equals(row.optString("status")) && !row.optString("payment_url", "").isEmpty() && !row.isNull("payment_url")),
+                        Action.custom("pay", "Pay now", (host, row, ctx) -> host.openUrl(Json.str(row, "payment_url")))
+                                .when(row -> "pending".equals(Json.str(row, "status")) && !Json.str(row, "payment_url", "").isEmpty() && !row.isNull("payment_url")),
                         Action.call("proof", "Upload transfer proof", "POST", "/billing/invoices/{id}/payment-proof").upload().success("Proof uploaded")
-                                .when(row -> "pending".equals(row.optString("status")) && "manual_transfer".equals(row.optString("payment_method")))
+                                .when(row -> "pending".equals(Json.str(row, "status")) && "manual_transfer".equals(Json.str(row, "payment_method")))
                                 .form(Field.file("file", "Transfer receipt (image/PDF)").accept("image/*,application/pdf").req().w(12),
                                         Field.text("sender_account_name", "Sender account name")),
                         Action.call("cancel", "Cancel", "POST", "/billing/invoices/{id}/cancel").confirm("Cancel this invoice?").success("Invoice cancelled")
-                                .when(row -> "pending".equals(row.optString("status"))),
+                                .when(row -> "pending".equals(Json.str(row, "status"))),
                         Action.download("pdf", "Download invoice", "/billing/invoices/{id}/pdf", "invoice.pdf")
-                                .when(row -> "paid".equals(row.optString("status")))));
+                                .when(row -> "paid".equals(Json.str(row, "status")))));
     }
 }

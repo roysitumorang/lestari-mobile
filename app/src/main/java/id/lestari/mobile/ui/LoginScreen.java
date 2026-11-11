@@ -165,9 +165,9 @@ public final class LoginScreen extends Screen {
             } catch (Exception ignored) {
                 // default theme
             }
-            Theme.apply(display.optString("color_theme", "emerald"));
+            Theme.apply(Json.str(display, "color_theme", "emerald"));
             chosenLanguage = null;
-            act.signedInWithLanguage(display.optString("language"));
+            act.signedInWithLanguage(Json.str(display, "language"));
         }, e -> {
             go.setEnabled(true);
             go.setText(I18n.t("Sign in"));

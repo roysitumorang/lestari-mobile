@@ -120,8 +120,8 @@ final class DatabaseDefs {
                                         Field.money("unit_cost", "Unit cost (for added stock)").showIf("mode", "add"),
                                         Field.select("reason", "Reason", Opt.of("correction", "damaged", "expired", "lost", "received", "other")),
                                         Field.textarea("note", "Note")),
-                        Action.custom("history", "Movement history", (host, row, ctx) -> host.table(I18n.t("Stock history") + " · " + row.optString("name"),
-                                "/inventory/stocks/" + row.optString("product_id") + "/movements", perPage100(),
+                        Action.custom("history", "Movement history", (host, row, ctx) -> host.table(I18n.t("Stock history") + " · " + Json.str(row, "name"),
+                                "/inventory/stocks/" + Json.str(row, "product_id") + "/movements", perPage100(),
                                 list(Field.col("created_at", "Date", "datetime"), Field.col("type", "Type", "badge"), Field.col("reference", "Reference"),
                                         Field.col("quantity_change", "Change", "number"), Field.col("stock_after", "Stock after", "number"), Field.col("actor_name", "By")),
                                 "No movements yet"))));
@@ -155,8 +155,8 @@ final class DatabaseDefs {
                         Action.call("points", "Adjust points", "POST", "/customers/{id}/points").success("Points updated")
                                 .form(Field.select("mode", "Mode", Opt.pairs("add", "Add", "subtract", "Subtract")).req().def("add"),
                                         Field.number("points", "Points").req().min(1), Field.textarea("note", "Note")),
-                        Action.custom("point_history", "Point history", (host, row, ctx) -> host.table(I18n.t("Point history") + " · " + row.optString("name"),
-                                "/customers/" + row.optString("id") + "/point-history", perPage100(),
+                        Action.custom("point_history", "Point history", (host, row, ctx) -> host.table(I18n.t("Point history") + " · " + Json.str(row, "name"),
+                                "/customers/" + Json.str(row, "id") + "/point-history", perPage100(),
                                 list(Field.col("created_at", "Date", "datetime"), Field.col("type", "Type", "badge"), Field.col("points", "Points", "number"),
                                         Field.col("balance_after", "Balance", "number"), Field.col("reference", "Reference"), Field.col("note", "Note")),
                                 "No point history"))));
@@ -249,9 +249,9 @@ final class DatabaseDefs {
                         Field.col("note", "Note"))
                 .rowActions(
                         Action.call("approve", "Approve & apply", "POST", "/stock-opnames/{id}/approve").confirm("Apply counted quantities to stock?")
-                                .success("Stock opname applied").when(row -> "pending".equals(row.optString("status"))),
+                                .success("Stock opname applied").when(row -> "pending".equals(Json.str(row, "status"))),
                         Action.call("reject", "Reject", "POST", "/stock-opnames/{id}/reject").danger().success("Stock opname rejected")
-                                .form(Field.textarea("reason", "Reason")).when(row -> "pending".equals(row.optString("status"))),
+                                .form(Field.textarea("reason", "Reason")).when(row -> "pending".equals(Json.str(row, "status"))),
                         Action.download("download", "Download", "/stock-opnames/{id}/export", "stock-opname.xlsx")));
     }
 }

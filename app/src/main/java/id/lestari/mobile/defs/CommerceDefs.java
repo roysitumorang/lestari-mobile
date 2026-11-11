@@ -44,14 +44,14 @@ final class CommerceDefs {
                         Field.money("subtotal", "Subtotal"), Field.money("shipping_fee", "Shipping"), Field.money("grand_total", "Total"),
                         Field.col("customer_note", "Customer note"))
                 .rowActions(
-                        status("confirm_payment", "Confirm payment", "processing", row -> "awaiting_confirmation".equals(row.optString("status"))),
-                        status("reject_payment", "Reject payment", "payment_rejected", row -> "awaiting_confirmation".equals(row.optString("status")))
+                        status("confirm_payment", "Confirm payment", "processing", row -> "awaiting_confirmation".equals(Json.str(row, "status"))),
+                        status("reject_payment", "Reject payment", "payment_rejected", row -> "awaiting_confirmation".equals(Json.str(row, "status")))
                                 .form(Field.textarea("reason", "Reason shown to the customer").req()),
-                        status("ship", "Mark as shipped", "shipped", row -> "processing".equals(row.optString("status")))
+                        status("ship", "Mark as shipped", "shipped", row -> "processing".equals(Json.str(row, "status")))
                                 .form(Field.text("courier", "Courier"), Field.text("tracking_number", "Tracking number")),
-                        status("deliver", "Mark as delivered", "delivered", row -> "shipped".equals(row.optString("status"))),
-                        status("complete", "Complete", "completed", row -> Arrays.asList("delivered", "processing").contains(row.optString("status"))),
-                        status("cancel", "Cancel order", "cancelled", row -> Arrays.asList("unpaid", "awaiting_confirmation", "processing").contains(row.optString("status")))
+                        status("deliver", "Mark as delivered", "delivered", row -> "shipped".equals(Json.str(row, "status"))),
+                        status("complete", "Complete", "completed", row -> Arrays.asList("delivered", "processing").contains(Json.str(row, "status"))),
+                        status("cancel", "Cancel order", "cancelled", row -> Arrays.asList("unpaid", "awaiting_confirmation", "processing").contains(Json.str(row, "status")))
                                 .danger().form(Field.textarea("reason", "Reason").req()),
                         Action.download("invoice", "Download invoice", "/catalog/orders/{id}/invoice", "order.pdf")));
 
@@ -96,10 +96,10 @@ final class CommerceDefs {
                                 Field.text("voucher_code", "Voucher (optional)")))
                 .rowActions(
                         Action.call("proof", "Upload transfer proof", "POST", "/ppob/deposits/{id}/payment-proof").upload().success("Proof uploaded")
-                                .when(row -> "pending".equals(row.optString("status")) && "manual_transfer".equals(row.optString("payment_method")))
+                                .when(row -> "pending".equals(Json.str(row, "status")) && "manual_transfer".equals(Json.str(row, "payment_method")))
                                 .form(Field.file("file", "Transfer receipt").accept("image/*,application/pdf").req().w(12)),
                         Action.call("cancel", "Cancel", "POST", "/ppob/deposits/{id}/cancel").confirm("Cancel this top-up?").success("Top-up cancelled")
-                                .when(row -> "pending".equals(row.optString("status")))));
+                                .when(row -> "pending".equals(Json.str(row, "status")))));
 
         ppobPrice(r, "ppob-prepaid", "PPOB Prepaid Prices", "/ppob/prices/prepaid",
                 Opt.humanized("pulsa", "data", "pln_token", "e_money", "game_voucher", "streaming"),
@@ -121,7 +121,7 @@ final class CommerceDefs {
                         Field.money("reward_balance", "Reward balance"))
                 .toolbar(
                         Action.call("create", "Create referral code", "POST", "/referrals/code").success("Referral code created")
-                                .when(d -> d.optString("code", "").isEmpty() || d.isNull("code"))
+                                .when(d -> Json.str(d, "code", "").isEmpty() || d.isNull("code"))
                                 .form(Field.text("code", "Preferred code (optional)").w(12)),
                         Action.call("withdraw", "Move rewards to coins", "POST", "/referrals/rewards/transfer-to-coin")
                                 .confirm("Move your whole reward balance to premium coins?").success("Rewards moved to coins"))
@@ -148,7 +148,7 @@ final class CommerceDefs {
                 .rowActions(
                         Action.call("read", "Mark as read", "POST", "/notifications/{id}/read").success("Marked as read")
                                 .when(row -> !Json.truthy(row.opt("read_at"))).after((host, res, row) -> host.refreshBadge()),
-                        Action.custom("open", "Open related page", (host, row, ctx) -> host.go(row.optString("link_route")))
+                        Action.custom("open", "Open related page", (host, row, ctx) -> host.go(Json.str(row, "link_route")))
                                 .when(row -> Json.truthy(row.opt("link_route")))));
     }
 

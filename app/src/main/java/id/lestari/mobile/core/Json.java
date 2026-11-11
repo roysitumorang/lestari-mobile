@@ -25,9 +25,16 @@ public final class Json {
         return cur;
     }
 
+    // Use these instead of JSONObject.optString: on Android optString returns the text "null" for a JSON null.
     public static String str(JSONObject o, String path) {
         Object v = get(o, path);
         return v == null ? "" : String.valueOf(v);
+    }
+
+    /** Like {@link #str(JSONObject, String)} with a fallback for missing, JSON-null or empty values. */
+    public static String str(JSONObject o, String path, String fallback) {
+        String s = str(o, path);
+        return s.isEmpty() ? fallback : s;
     }
 
     public static double num(Object v) {

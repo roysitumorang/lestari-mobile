@@ -87,7 +87,7 @@ public final class MainActivity extends Activity implements Host {
         super.onCreate(state);
         registry = Defs.get();
         JSONObject display = parse(api().store().get(Api.K_THEME));
-        Theme.apply(display.optString("color_theme", "emerald"));
+        Theme.apply(Json.str(display, "color_theme", "emerald"));
         buildChrome();
         api().setListener(() -> LestariApp.get().main().post(() -> {
             toast(I18n.t("Session expired, please sign in again."));
@@ -512,8 +512,8 @@ public final class MainActivity extends Activity implements Host {
         if (display == null) return;
         api().store().set(Api.K_THEME, display.toString());
         onMain(() -> {
-            Theme.apply(display.optString("color_theme", "emerald"));
-            if (LestariApp.get().setLanguage(display.optString("language"))) registry = Defs.get();
+            Theme.apply(Json.str(display, "color_theme", "emerald"));
+            if (LestariApp.get().setLanguage(Json.str(display, "language"))) registry = Defs.get();
             restart();
         });
     }
