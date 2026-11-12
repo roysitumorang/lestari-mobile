@@ -91,7 +91,7 @@ public final class LoginScreen extends Screen {
         card.addView(email, Ui.match());
         label(card, I18n.t("Password"));
         password = input("", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        card.addView(password, Ui.match());
+        card.addView(Ui.passwordField(ctx, password), Ui.match());
         otpBox = Ui.vbox(ctx);
         label(otpBox, I18n.t("Code from your authenticator app"));
         otp = input("000000", InputType.TYPE_CLASS_NUMBER);

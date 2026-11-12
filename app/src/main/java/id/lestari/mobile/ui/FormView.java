@@ -309,6 +309,8 @@ public final class FormView {
                 paint.run();
                 edit.addTextChangedListener(watcher(paint));
                 block.addView(row, Ui.match());
+            } else if ("password".equals(t)) {
+                block.addView(Ui.passwordField(c, edit), Ui.match());
             } else {
                 block.addView(edit, Ui.match());
             }

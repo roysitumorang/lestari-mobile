@@ -51,7 +51,7 @@ app/src/main/java/id/lestari/mobile/
     CrudScreen          list / search / tabs / filters / sort / paging / create / edit / delete / bulk delete / import / export
     ReportScreen        period presets + date range + filters → summary cards, chart, rows, totals, details, export
     SettingsScreen      GET → form → PUT (dotted keys sent as nested objects), toolbar actions, extra table below
-    FormView/FormScreen every field type: text, number, money, percent, password (base64), date/time pickers,
+    FormView/FormScreen every field type: text, number, money, percent, password (base64; dots with a show/hide eye), date/time pickers,
                         searchable select, multi-select, switch, colour, image upload, file, editable item rows
     Dashboard, Missions, Plugins, ResetData, CardList (integrations, loans) — the hand-written pages
     ChartView, ImageLoader, Dialogs, Theme (emerald / ivory / charcoal), Ui

@@ -8,11 +8,15 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.RippleDrawable;
 import android.text.TextUtils;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,6 +26,7 @@ import android.widget.TextView;
 
 import id.lestari.mobile.core.Field;
 import id.lestari.mobile.core.Format;
+import id.lestari.mobile.core.I18n;
 import id.lestari.mobile.core.Json;
 
 import org.json.JSONObject;
@@ -159,6 +164,37 @@ public final class Ui {
     }
 
     /** A small colored pill for statuses. */
+    /**
+     * Wraps a password (or PIN) input: what is typed shows as dots, and an eye button at the end of the field shows
+     * and hides it. Call it after the input type is set; add the returned view instead of the input.
+     */
+    public static View passwordField(Context c, final EditText edit) {
+        // setSingleLine() replaces the transformation an input type installs, so the dots are set here, last
+        edit.setSingleLine(true);
+        edit.setTypeface(Typeface.DEFAULT);
+        edit.setTransformationMethod(PasswordTransformationMethod.getInstance());
+        int side = dp(c, 44);
+        edit.setPaddingRelative(edit.getPaddingStart(), edit.getPaddingTop(), side, edit.getPaddingBottom());
+        FrameLayout box = new FrameLayout(c);
+        box.addView(edit, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        final EyeDrawable icon = new EyeDrawable(Theme.muted, dp(c, 22), dp(c, 1.6f));
+        final ImageView eye = new ImageView(c);
+        eye.setImageDrawable(icon);
+        eye.setScaleType(ImageView.ScaleType.CENTER);
+        eye.setBackground(new RippleDrawable(ColorStateList.valueOf(0x22000000), null, null));
+        eye.setContentDescription(I18n.t("Show password"));
+        eye.setOnClickListener(v -> {
+            boolean show = edit.getTransformationMethod() instanceof PasswordTransformationMethod;
+            int start = Math.max(edit.getSelectionStart(), 0), end = Math.max(edit.getSelectionEnd(), 0);
+            edit.setTransformationMethod(show ? HideReturnsTransformationMethod.getInstance() : PasswordTransformationMethod.getInstance());
+            edit.setSelection(start, end);
+            icon.setStruck(!show);
+            eye.setContentDescription(I18n.t(show ? "Hide password" : "Show password"));
+        });
+        box.addView(eye, new FrameLayout.LayoutParams(side, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.END | Gravity.CENTER_VERTICAL));
+        return box;
+    }
+
     public static TextView badge(Context c, String value) {
         TextView t = text(c, Format.badge(value), 12, Theme.statusColor(value), true);
         int col = Theme.statusColor(value);
